@@ -67,24 +67,61 @@ function hitRotate(x: number, y: number, ic: PatternIcon): boolean {
 const colorCanvas = document.createElement('canvas');
 const colorCtx = colorCanvas.getContext('2d')!;
 
+// Fixed-stroke: patch stroke-width per target size, cache by size bucket
+const fixedSvgCache = new Map<string, string>(); // key: src|bucket → patched SVG string
+const fixedImgCache = new Map<string, HTMLImageElement>(); // key: src|bucket → Image
+
+function getFixedStrokeImg(src: string, targetSize: number): HTMLImageElement {
+  const bucket = Math.round(targetSize / 4) * 4; // round to nearest 4px
+  const key = src + '|' + bucket;
+  const cached = fixedImgCache.get(key);
+  if (cached) return cached;
+
+  // Decode and patch SVG: scale stroke-width inversely with size
+  let svgText: string;
+  if (src.startsWith('data:image/svg+xml;base64,')) {
+    svgText = atob(src.split(',')[1]);
+  } else {
+    fixedImgCache.set(key, imgCache.get(src)!);
+    return imgCache.get(src)!;
+  }
+
+  // viewBox is 24x24, original stroke-width is 2
+  // At target size `bucket`, we want stroke to render as 2px
+  // So stroke-width should be: 2 * 24 / bucket
+  const scale = 24 / Math.max(bucket, 1);
+  const newSw = Math.max(0.5, 2 * scale);
+
+  const patched = svgText
+    .replace(/stroke-width="[^"]*"/g, `stroke-width="${newSw.toFixed(2)}"`)
+    .replace(/stroke-width='[^']*'/g, `stroke-width="${newSw.toFixed(2)}"`);
+
+  const dataUrl = 'data:image/svg+xml;base64,' + btoa(patched);
+  const i = new Image();
+  i.src = dataUrl;
+  fixedImgCache.set(key, i);
+  return i;
+}
+
 function drawIcon(ctx: CanvasRenderingContext2D, img: HTMLImageElement, ic: PatternIcon, s: PatternState) {
   ctx.save();
   ctx.globalAlpha = ic.opacity;
   ctx.translate(ic.x, ic.y);
   ctx.rotate((ic.rotation * Math.PI) / 180);
   const half = ic.size / 2;
+  const drawImg = s.fixedStroke ? getFixedStrokeImg(img.src, ic.size) : img;
   if (s.useIconColor) {
     const w = Math.ceil(ic.size), h = Math.ceil(ic.size);
     if (colorCanvas.width !== w || colorCanvas.height !== h) { colorCanvas.width = w; colorCanvas.height = h; }
     colorCtx.clearRect(0, 0, w, h);
-    colorCtx.drawImage(img, 0, 0, w, h);
+    colorCtx.drawImage(drawImg, 0, 0, w, h);
     colorCtx.globalCompositeOperation = 'source-in';
     colorCtx.fillStyle = s.iconColor;
     colorCtx.fillRect(0, 0, w, h);
     colorCtx.globalCompositeOperation = 'source-over';
     ctx.drawImage(colorCanvas, -half, -half);
   } else {
-    ctx.drawImage(img, -half, -half, ic.size, ic.size);
+    ctx.drawImage(drawImg, -half, -half, ic.size, ic.size);
   }
   ctx.restore();
 }
@@ -208,6 +245,7 @@ export function PatternCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const sz = useRef({ w: 800, h: 600 });
+  const [, tick] = React.useState(0);
 
   const redraw = useCallback(() => {
     const c = canvasRef.current;
@@ -232,7 +270,21 @@ export function PatternCanvas() {
   useEffect(() => subscribe(() => {
     ensurePlacedIcons().then(redraw);
     redraw();
+    tick(n => n + 1);
   }), [redraw]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const s = getState();
+        if (s.selectedIconId) {
+          setState({ icons: s.icons.filter(ic => ic.id !== s.selectedIconId), selectedIconId: null });
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {

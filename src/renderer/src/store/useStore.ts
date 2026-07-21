@@ -16,6 +16,7 @@ export interface PatternState {
   canvasWidth: number; canvasHeight: number;
   iconSpacing: number; iconOpacity: number; iconSize: number;
   iconColor: string; useIconColor: boolean; iconRotation: number;
+  fixedStroke: boolean;
   packs: IconPack[];
   activePack: string | null;
   availableIcons: { name: string; dataUrl: string }[];
@@ -29,7 +30,7 @@ export const defaultState: PatternState = {
   gradientAngle: 135, useGradient: false, transparentBg: false,
   canvasWidth: 300, canvasHeight: 300,
   iconSpacing: 60, iconOpacity: 0.5, iconSize: 32,
-  iconColor: '#ffffff', useIconColor: true, iconRotation: 0,
+  iconColor: '#ffffff', useIconColor: true, iconRotation: 0, fixedStroke: false,
   packs: [], activePack: null, availableIcons: [],
   viewportZoom: 1,
 };

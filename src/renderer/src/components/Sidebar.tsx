@@ -15,7 +15,7 @@ export function Sidebar() {
   return (
     <div className="sidebar">
       {/* Canvas Size */}
-      <Section title="Canvas">
+      <Section title="Canvas" fixed>
         <div className="control-row">
           <span className="control-label">W x H</span>
           <input type="number" value={s.canvasWidth} min={16} max={4096}
@@ -38,7 +38,7 @@ export function Sidebar() {
       </Section>
 
       {/* Background */}
-      <Section title="Background">
+      <Section title="Background" scrollable>
         <div className="toggle-row">
           <span className="control-label">Gradient</span>
           <button className={`toggle ${s.useGradient ? 'active' : ''}`}
@@ -72,7 +72,7 @@ export function Sidebar() {
       </Section>
 
       {/* Pattern Icons */}
-      <Section title="Pattern">
+      <Section title="Pattern" scrollable>
         <Slider label="Size" min={8} max={200} value={s.iconSize}
           onChange={(v) => setState({ iconSize: v })} />
         <Slider label="Spacing" min={16} max={300} value={s.iconSpacing}
@@ -93,12 +93,97 @@ export function Sidebar() {
             style={{ marginLeft: 'auto' }} />
         </div>
 
+        <div className="toggle-row">
+          <span className="control-label">Fixed Stroke</span>
+          <button className={`toggle ${s.fixedStroke ? 'active' : ''}`}
+            onClick={() => setState({ fixedStroke: !s.fixedStroke })} />
+        </div>
+
         <PatternPreview />
+      </Section>
+
+      {/* Auto-generate */}
+      <Section title="Generate" scrollable>
+        <button className="btn btn-full btn-danger" onClick={() => setState({ icons: [], selectedIconId: null })}>
+          Clear Canvas
+        </button>
+        <button className="btn btn-full" onClick={() => {
+          const st = getState();
+          if (st.icons.length === 0) return;
+          const minSz = 10, maxSz = Math.min(st.canvasWidth, st.canvasHeight) * 0.18;
+          setState({ icons: st.icons.map(ic => ({
+            ...ic,
+            x: Math.round(minSz + Math.random() * (st.canvasWidth - minSz * 2)),
+            y: Math.round(minSz + Math.random() * (st.canvasHeight - minSz * 2)),
+            size: Math.round(minSz + Math.random() * (maxSz - minSz)),
+            rotation: Math.round(Math.random() * 360 - 180),
+          }))});
+        }}>Shuffle</button>
+        <button className="btn btn-full" onClick={() => {
+          const st = getState();
+          if (st.availableIcons.length === 0) return;
+          const placed: { x: number; y: number; r: number }[] = [];
+          const newIcons: PatternIcon[] = [];
+          const minSz = 10, maxSz = Math.min(st.canvasWidth, st.canvasHeight) * 0.18;
+          const totalArea = st.canvasWidth * st.canvasHeight;
+          let filledArea = 0;
+          for (let i = 0; i < 80 && filledArea < totalArea * 0.7; i++) {
+            for (let a = 0; a < 100; a++) {
+              const sz = minSz + Math.random() * (maxSz - minSz);
+              const x = sz + Math.random() * (st.canvasWidth - sz * 2);
+              const y = sz + Math.random() * (st.canvasHeight - sz * 2);
+              const r = sz / 2 + 2;
+              if (placed.every(p => Math.hypot(p.x - x, p.y - y) > p.r + r)) {
+                placed.push({ x, y, r });
+                filledArea += sz * sz;
+                const ic = st.availableIcons[Math.floor(Math.random() * st.availableIcons.length)];
+                newIcons.push({
+                  id: `i-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+                  name: ic.name, dataUrl: ic.dataUrl,
+                  x: Math.round(x), y: Math.round(y),
+                  size: Math.round(sz),
+                  rotation: Math.round(Math.random() * 360 - 180),
+                  opacity: st.iconOpacity,
+                });
+                break;
+              }
+            }
+          }
+          setState({ icons: [...st.icons, ...newIcons] });
+        }}>Scatter Random</button>
+        <button className="btn btn-full" onClick={() => {
+          const st = getState();
+          if (st.availableIcons.length === 0) return;
+          const newIcons: PatternIcon[] = [];
+          const step = Math.max(24, st.iconSpacing);
+          const maxSz = step * 0.55;
+          const cols = Math.ceil(st.canvasWidth / step) + 1;
+          const rows = Math.ceil(st.canvasHeight / step) + 1;
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const ic = st.availableIcons[Math.floor(Math.random() * st.availableIcons.length)];
+              const sz = 8 + Math.random() * maxSz;
+              const cx = col * step + step / 2;
+              const cy = row * step + step / 2;
+              const jitter = (step - sz) * 0.3;
+              newIcons.push({
+                id: `i-${Date.now()}-${row}-${col}-${Math.random().toString(36).slice(2, 6)}`,
+                name: ic.name, dataUrl: ic.dataUrl,
+                x: Math.round(cx + (Math.random() - 0.5) * jitter),
+                y: Math.round(cy + (Math.random() - 0.5) * jitter),
+                size: Math.round(sz),
+                rotation: Math.round(Math.random() * 360),
+                opacity: s.iconOpacity,
+              });
+            }
+          }
+          setState({ icons: [...st.icons, ...newIcons] });
+        }}>Generate Tile</button>
       </Section>
 
       {/* Selected Icon */}
       {selectedIcon && (
-        <Section title="Selected Icon">
+        <Section title="Selected Icon" scrollable>
           <Slider label="X" min={0} max={s.canvasWidth} value={Math.round(selectedIcon.x)}
             onChange={(v) => updateIcon(selectedIcon.id, { x: v })} />
           <Slider label="Y" min={0} max={s.canvasHeight} value={Math.round(selectedIcon.y)}
@@ -117,7 +202,7 @@ export function Sidebar() {
       )}
 
       {/* Export */}
-      <Section title="Export">
+      <Section title="Export" scrollable>
         <button className="btn btn-primary btn-full" onClick={handleExport}>Download PNG</button>
         <button className="btn btn-full" onClick={handleExportTile}>Download Tile</button>
       </Section>
@@ -127,11 +212,13 @@ export function Sidebar() {
 
 /* ── Sub-components ── */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, fixed, scrollable }: { title: string; children: React.ReactNode; fixed?: boolean; scrollable?: boolean }) {
   return (
-    <div className="sidebar-section">
+    <div className={`sidebar-section${fixed ? ' section-fixed' : ''}`}>
       <div className="sidebar-section-title">{title}</div>
-      {children}
+      {scrollable ? (
+        <div className="section-scroll">{children}</div>
+      ) : children}
     </div>
   );
 }

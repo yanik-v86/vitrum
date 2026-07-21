@@ -1,2 +1,15 @@
 node_modules/
 dist/
+default-icons/
+icon-packs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

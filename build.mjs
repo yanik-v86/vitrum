@@ -24,7 +24,7 @@ await build({
 // Copy HTML
 cpSync('src/renderer/index.html', 'dist/renderer/index.html');
 
-// Copy default icons
+// Copy default icons from node_modules
 function copyDirSync(src, dest) {
   mkdirSync(dest, { recursive: true });
   for (const entry of readdirSync(src)) {
@@ -37,8 +37,14 @@ function copyDirSync(src, dest) {
     }
   }
 }
-if (existsSync('default-icons')) {
-  copyDirSync('default-icons', 'dist/default-icons');
+
+const lucideDir = 'node_modules/lucide-static/icons';
+const tablerDir = 'node_modules/@tabler/icons/icons/outline';
+if (existsSync(lucideDir)) {
+  copyDirSync(lucideDir, 'dist/default-icons/lucide');
+}
+if (existsSync(tablerDir)) {
+  copyDirSync(tablerDir, 'dist/default-icons/tabler');
 }
 
 console.log('Build complete!');

@@ -154,6 +154,12 @@ export function IconPicker() {
                   <div className="pack-item-name">{pack.name}</div>
                   <div className="pack-item-count">{pack.icons.length} icons</div>
                 </div>
+                <button className="pack-item-delete" onClick={async (e) => {
+                  e.stopPropagation();
+                  try { await window.electronAPI.deletePack(pack.name); } catch {}
+                  const packs = s.packs.filter(p => p.name !== pack.name);
+                  setState({ packs, ...(s.activePack === pack.name ? { activePack: null, availableIcons: [] } : {}) });
+                }}>&times;</button>
               </div>
             ))}
           </div>
@@ -177,6 +183,17 @@ export function IconPicker() {
                   draggable onDragStart={e => { e.dataTransfer.setData('application/json', JSON.stringify(icon)); e.dataTransfer.effectAllowed = 'copy'; }}
                   onClick={() => addIcon(icon)}>
                   <img src={icon.dataUrl} alt={icon.name} draggable={false} loading="lazy" />
+                  <button className="icon-item-delete" onClick={(e) => {
+                    e.stopPropagation();
+                    const all = s.availableIcons.filter((_, idx) => {
+                      // Find the index in the full array
+                      const globalIdx = s.availableIcons.indexOf(icon);
+                      return idx !== globalIdx;
+                    });
+                    // Actually filter by reference
+                    const newIcons = s.availableIcons.filter(ic => ic !== icon);
+                    setState({ availableIcons: newIcons });
+                  }}>&times;</button>
                 </div>
               ))}
             </div>

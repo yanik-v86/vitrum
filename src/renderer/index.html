@@ -96,6 +96,22 @@ html, body, #root {
   display: flex; flex-direction: column; gap: 10px;
   overflow: hidden;
 }
+.sidebar-section.scrollable {
+  max-height: 220px;
+  overflow-y: auto;
+}
+.sidebar-section::-webkit-scrollbar { width: 3px; }
+.sidebar-section::-webkit-scrollbar-track { background: transparent; }
+.sidebar-section::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.section-fixed { max-height: none !important; overflow: visible !important; }
+.section-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+  min-height: 0;
+}
+.section-scroll::-webkit-scrollbar { width: 3px; }
+.section-scroll::-webkit-scrollbar-track { background: transparent; }
+.section-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 /* Glass highlight sweep */
 .sidebar-section::before {
   content: '';
@@ -115,7 +131,10 @@ html, body, #root {
 .sidebar-section-title {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1.5px; color: var(--accent); padding-bottom: 4px;
-  position: relative; z-index: 1;
+  position: sticky; top: -14px; z-index: 2;
+  background: var(--glass-bg);
+  margin: -14px -14px 0 -14px;
+  padding: 14px 14px 4px 14px;
 }
 
 /* ──────────────── CONTROLS ──────────────── */
@@ -262,10 +281,11 @@ input[type="text"] { text-align: left; padding: 0 8px; }
 
 /* ──────────────── ICON PICKER ──────────────── */
 .icon-picker {
-  width: 230px; flex-shrink: 0; overflow-y: auto; overflow-x: hidden;
+  width: 230px; flex-shrink: 0;
   padding: 12px; display: flex; flex-direction: column; gap: 8px;
   background: linear-gradient(180deg, rgba(14,14,22,0.97) 0%, rgba(10,10,16,0.99) 100%);
   border-left: 1px solid rgba(255,255,255,0.04);
+  height: 100%; overflow: hidden;
 }
 .icon-picker::-webkit-scrollbar { width: 3px; }
 .icon-picker::-webkit-scrollbar-track { background: transparent; }
@@ -274,6 +294,7 @@ input[type="text"] { text-align: left; padding: 0 8px; }
 .icon-grid-scroll {
   flex: 1; overflow-y: auto; overflow-x: hidden;
   position: relative; z-index: 1;
+  min-height: 0;
 }
 .icon-grid-scroll::-webkit-scrollbar { width: 3px; }
 .icon-grid-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -303,6 +324,14 @@ input[type="text"] { text-align: left; padding: 0 8px; }
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .icon-item:hover::before { opacity: 1; }
+.icon-item-delete {
+  display: none; position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px; border-radius: 50%; border: none;
+  background: rgba(255,80,70,0.8); color: #fff;
+  font-size: 10px; line-height: 16px; text-align: center;
+  cursor: pointer; z-index: 2;
+}
+.icon-item:hover .icon-item-delete { display: block; }
 .icon-item img {
   width: 100%; height: 100%; object-fit: contain;
   position: relative; z-index: 1;
