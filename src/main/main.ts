@@ -126,10 +126,8 @@ ipcMain.handle('loadDefaultIcons', async () => {
           const buf = await readFile(path.join(setDir, file));
           if (!buf) return null;
           let svg = buf.toString('utf-8');
-          // Tabler icons use stroke="currentColor" — force white for dark backgrounds
-          if (setName === 'tabler') {
-            svg = svg.replace(/<svg([^>]*)>/, '<svg$1 color="white">');
-          }
+          // Force white color for dark backgrounds (icons use stroke="currentColor")
+          svg = svg.replace(/<svg([^>]*)>/, '<svg$1 color="white">');
           return { name: file.replace('.svg', ''), dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}` };
         })
       );

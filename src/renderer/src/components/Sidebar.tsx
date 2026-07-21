@@ -37,27 +37,6 @@ export function Sidebar() {
         </div>
       </Section>
 
-      {/* Viewport Zoom */}
-      <Section title="Zoom">
-        <Slider label="Scale" min={10} max={500} value={Math.round(s.viewportZoom * 100)}
-          onChange={(v) => setState({ viewportZoom: v / 100 })} unit="%" />
-        <div style={{ display: 'flex', gap: 4, position: 'relative', zIndex: 1 }}>
-          <button className="btn" style={{ height: 24, fontSize: 10, flex: 1 }}
-            onClick={() => setState({ viewportZoom: 1 })}>100%</button>
-          <button className="btn" style={{ height: 24, fontSize: 10, flex: 1 }}
-            onClick={() => setState({ viewportZoom: 2 })}>200%</button>
-          <button className="btn" style={{ height: 24, fontSize: 10, flex: 1 }}
-            onClick={() => {
-              const st = getState();
-              // Fit to viewport
-              const areaW = window.innerWidth - 510;
-              const areaH = window.innerHeight - 60;
-              const fit = Math.min(1, areaW / st.canvasWidth, areaH / st.canvasHeight);
-              setState({ viewportZoom: Math.round(fit * 100) / 100 });
-            }}>Fit</button>
-        </div>
-      </Section>
-
       {/* Background */}
       <Section title="Background">
         <div className="toggle-row">

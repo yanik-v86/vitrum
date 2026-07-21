@@ -144,7 +144,7 @@ input[type="number"]:focus { border-color: var(--accent); }
 }
 .color-swatch:hover { transform: scale(1.1); }
 .color-swatch input[type="color"] {
-  position: absolute; width: 0; height: 0; opacity: 0;
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
 }
 
 /* ── Toggle ── */

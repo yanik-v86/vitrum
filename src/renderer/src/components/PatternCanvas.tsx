@@ -1,7 +1,11 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { getState, setState, subscribe, PatternIcon, PatternState } from '../store/useStore';
 
-let drag: { id: string; ox: number; oy: number } | null = null;
+type DragMode = { mode: 'move'; id: string; ox: number; oy: number }
+  | { mode: 'resize'; id: string; startDist: number; startSize: number }
+  | { mode: 'rotate'; id: string; startAngle: number; startRot: number };
+
+let interaction: DragMode | null = null;
 const imgCache = new Map<string, HTMLImageElement>();
 
 function loadImg(src: string): Promise<HTMLImageElement> {
@@ -41,6 +45,49 @@ function getTileCanvas(w: number, h: number) {
   return tileCtx!;
 }
 
+// Hit-test helpers (all in canvas coords)
+function hitResize(x: number, y: number, ic: PatternIcon): boolean {
+  const rad = -(ic.rotation * Math.PI) / 180;
+  const dx = x - ic.x, dy = y - ic.y;
+  const lx = dx * Math.cos(rad) - dy * Math.sin(rad);
+  const ly = dx * Math.sin(rad) + dy * Math.cos(rad);
+  const half = ic.size / 2;
+  return lx > half - 6 && lx < half + 10 && ly > half - 6 && ly < half + 10;
+}
+
+function hitRotate(x: number, y: number, ic: PatternIcon): boolean {
+  const rad = -(ic.rotation * Math.PI) / 180;
+  const dx = x - ic.x, dy = y - ic.y;
+  const lx = dx * Math.cos(rad) - dy * Math.sin(rad);
+  const ly = dx * Math.sin(rad) + dy * Math.cos(rad);
+  return Math.abs(lx) < 10 && ly < -ic.size / 2 - 6 && ly > -ic.size / 2 - 28;
+}
+
+const colorCanvas = document.createElement('canvas');
+const colorCtx = colorCanvas.getContext('2d')!;
+
+function drawIcon(ctx: CanvasRenderingContext2D, img: HTMLImageElement, ic: PatternIcon, s: PatternState) {
+  ctx.save();
+  ctx.globalAlpha = ic.opacity;
+  ctx.translate(ic.x, ic.y);
+  ctx.rotate((ic.rotation * Math.PI) / 180);
+  const half = ic.size / 2;
+  if (s.useIconColor) {
+    const w = Math.ceil(ic.size), h = Math.ceil(ic.size);
+    if (colorCanvas.width !== w || colorCanvas.height !== h) { colorCanvas.width = w; colorCanvas.height = h; }
+    colorCtx.clearRect(0, 0, w, h);
+    colorCtx.drawImage(img, 0, 0, w, h);
+    colorCtx.globalCompositeOperation = 'source-in';
+    colorCtx.fillStyle = s.iconColor;
+    colorCtx.fillRect(0, 0, w, h);
+    colorCtx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(colorCanvas, -half, -half);
+  } else {
+    ctx.drawImage(img, -half, -half, ic.size, ic.size);
+  }
+  ctx.restore();
+}
+
 function doRender(canvas: HTMLCanvasElement, vw: number, vh: number) {
   const ctx = canvas.getContext('2d');
   if (!ctx || vw < 1 || vh < 1) return;
@@ -50,46 +97,84 @@ function doRender(canvas: HTMLCanvasElement, vw: number, vh: number) {
   const z = s.viewportZoom, cw = s.canvasWidth, ch = s.canvasHeight;
   const ox = (vw - cw * z) / 2, oy = (vh - ch * z) / 2;
 
-  // 1) Build tile: background + icons on offscreen canvas
+  // 1) Build tile
   const tc = getTileCanvas(cw, ch);
   fillBg(tc, cw, ch, s);
   for (const ic of s.icons) {
     const img = imgCache.get(ic.dataUrl);
     if (!img) continue;
-    tc.save();
-    tc.globalAlpha = ic.opacity;
-    tc.translate(ic.x, ic.y);
-    tc.rotate((ic.rotation * Math.PI) / 180);
-    tc.drawImage(img, -ic.size / 2, -ic.size / 2, ic.size, ic.size);
-    tc.restore();
+    drawIcon(tc, img, ic, s);
   }
 
-  // 2) Tile the viewport
-  const pat = ctx.createPattern(tileCanvas!, 'repeat');
-  if (pat) {
-    ctx.save();
-    ctx.translate(ox, oy);
-    ctx.scale(z, z);
-    ctx.fillStyle = pat;
-    ctx.fillRect(-ox / z, -oy / z, vw / z, vh / z);
-    ctx.restore();
-  }
-
-  // 3) Draw the editing canvas on top with selection rings
+  // 2) Tile viewport by drawing the tile in a grid (avoids createPattern ghosting)
   ctx.save();
   ctx.translate(ox, oy);
   ctx.scale(z, z);
+  const startX = Math.floor(-ox / z / cw) * cw;
+  const startY = Math.floor(-oy / z / ch) * ch;
+  const endX = startX + Math.ceil(vw / z / cw) * cw + cw;
+  const endY = startY + Math.ceil(vh / z / ch) * ch + ch;
+  for (let ty = startY; ty < endY; ty += ch) {
+    for (let tx = startX; tx < endX; tx += cw) {
+      ctx.drawImage(tileCanvas!, tx, ty);
+    }
+  }
+  ctx.restore();
+
+  // 3) Selection rings + handles
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(z, z);
+  const sel = s.icons.find(ic => ic.id === s.selectedIconId);
   for (const ic of s.icons) {
+    const isSel = ic.id === s.selectedIconId;
     ctx.save();
     ctx.translate(ic.x, ic.y);
-    ctx.strokeStyle = ic.id === s.selectedIconId ? '#7c5cff' : 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = ic.id === s.selectedIconId ? 2 / z : 1 / z;
-    ctx.setLineDash(ic.id === s.selectedIconId ? [] : [4 / z, 4 / z]);
+    ctx.strokeStyle = isSel ? '#7c5cff' : 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = isSel ? 2 / z : 1 / z;
+    ctx.setLineDash(isSel ? [] : [4 / z, 4 / z]);
     ctx.beginPath();
     ctx.arc(0, 0, ic.size / 2 + 4, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
+
+    // Handles for selected icon
+    if (isSel) {
+      const rad = (ic.rotation * Math.PI) / 180;
+      const half = ic.size / 2;
+      ctx.save();
+      ctx.translate(ic.x, ic.y);
+      ctx.rotate(rad);
+
+      // Resize handle (bottom-right corner)
+      const rhx = half, rhy = half;
+      ctx.fillStyle = '#7c5cff';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5 / z;
+      ctx.beginPath();
+      ctx.arc(rhx, rhy, 5 / z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Rotate handle (top center, connected by line)
+      const ryx = 0, ryy = -half - 16 / z;
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 1 / z;
+      ctx.beginPath();
+      ctx.moveTo(0, -half);
+      ctx.lineTo(ryx, ryy);
+      ctx.stroke();
+      ctx.fillStyle = '#7c5cff';
+      ctx.beginPath();
+      ctx.arc(ryx, ryy, 5 / z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5 / z;
+      ctx.stroke();
+
+      ctx.restore();
+    }
   }
   ctx.restore();
 
@@ -120,18 +205,15 @@ export function PatternCanvas() {
       }
     });
     ro.observe(el);
-    // Force an immediate render so the canvas is never blank
     redraw();
     return () => ro.disconnect();
   }, [redraw]);
 
-  // Subscribe to all state changes
   useEffect(() => subscribe(() => {
     ensurePlacedIcons().then(redraw);
     redraw();
   }), [redraw]);
 
-  // Load placed icon images on an interval
   useEffect(() => {
     const interval = setInterval(() => {
       const s = getState();
@@ -144,14 +226,7 @@ export function PatternCanvas() {
     return () => clearInterval(interval);
   }, [redraw]);
 
-  // ── Input handlers ──
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const s = getState();
-    const d = e.ctrlKey ? -e.deltaY * 0.01 : -e.deltaY * 0.002;
-    setState({ viewportZoom: Math.round(Math.max(0.1, Math.min(5, s.viewportZoom + d)) * 100) / 100 });
-  }, []);
-
+  // ── Coord conversion ──
   function toPat(cx: number, cy: number) {
     const r = wrapRef.current?.getBoundingClientRect();
     if (!r) return { x: 0, y: 0 };
@@ -159,13 +234,55 @@ export function PatternCanvas() {
     return { x: (cx - r.left - r.width / 2) / z + s.canvasWidth / 2, y: (cy - r.top - r.height / 2) / z + s.canvasHeight / 2 };
   }
 
+  // ── Cursor tracking ──
+  const updateCursor = useCallback((e: React.MouseEvent) => {
+    if (interaction) return;
+    const { x, y } = toPat(e.clientX, e.clientY);
+    const s = getState();
+    const el = wrapRef.current;
+    if (!el) return;
+    const sel = s.icons.find(ic => ic.id === s.selectedIconId);
+    if (sel && hitResize(x, y, sel)) { el.style.cursor = 'nwse-resize'; return; }
+    if (sel && hitRotate(x, y, sel)) { el.style.cursor = 'crosshair'; return; }
+    for (let i = s.icons.length - 1; i >= 0; i--) {
+      const ic = s.icons[i];
+      if ((x - ic.x) ** 2 + (y - ic.y) ** 2 < (ic.size / 2 + 8) ** 2) { el.style.cursor = 'grab'; return; }
+    }
+    el.style.cursor = 'default';
+  }, []);
+
+  // ── Mouse handlers ──
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const s = getState();
+    const d = e.ctrlKey ? -e.deltaY * 0.01 : -e.deltaY * 0.002;
+    setState({ viewportZoom: Math.round(Math.max(0.1, Math.min(5, s.viewportZoom + d)) * 100) / 100 });
+  }, []);
+
   const md = useCallback((e: React.MouseEvent) => {
     const { x, y } = toPat(e.clientX, e.clientY);
-    for (let i = getState().icons.length - 1; i >= 0; i--) {
-      const ic = getState().icons[i];
+    const s = getState();
+
+    // Check resize handle on selected icon
+    const sel = s.icons.find(ic => ic.id === s.selectedIconId);
+    if (sel && hitResize(x, y, sel)) {
+      const dx = x - sel.x, dy = y - sel.y;
+      interaction = { mode: 'resize', id: sel.id, startDist: Math.hypot(dx, dy), startSize: sel.size };
+      return;
+    }
+    // Check rotate handle on selected icon
+    if (sel && hitRotate(x, y, sel)) {
+      const angle = Math.atan2(y - sel.y, x - sel.x);
+      interaction = { mode: 'rotate', id: sel.id, startAngle: angle, startRot: sel.rotation };
+      return;
+    }
+    // Check icon body (pick topmost)
+    for (let i = s.icons.length - 1; i >= 0; i--) {
+      const ic = s.icons[i];
       if ((x - ic.x) ** 2 + (y - ic.y) ** 2 < (ic.size / 2 + 8) ** 2) {
-        drag = { id: ic.id, ox: x - ic.x, oy: y - ic.y };
+        interaction = { mode: 'move', id: ic.id, ox: x - ic.x, oy: y - ic.y };
         setState({ selectedIconId: ic.id });
+        if (wrapRef.current) wrapRef.current.style.cursor = 'grabbing';
         return;
       }
     }
@@ -173,12 +290,35 @@ export function PatternCanvas() {
   }, []);
 
   const mm = useCallback((e: React.MouseEvent) => {
-    if (!drag) return;
     const { x, y } = toPat(e.clientX, e.clientY);
-    setState({ icons: getState().icons.map(ic => ic.id === drag!.id ? { ...ic, x: x - drag!.ox, y: y - drag!.oy } : ic) });
-  }, []);
+    if (!interaction) { updateCursor(e); return; }
 
-  const mu = useCallback(() => { drag = null; }, []);
+    if (interaction.mode === 'move') {
+      setState({ icons: getState().icons.map(ic => ic.id === interaction!.id ? { ...ic, x: x - interaction!.ox, y: y - interaction!.oy } : ic) });
+    } else if (interaction.mode === 'resize') {
+      const ic = getState().icons.find(i => i.id === interaction!.id);
+      if (ic) {
+        const dx = x - ic.x, dy = y - ic.y;
+        const dist = Math.hypot(dx, dy);
+        const scale = dist / (interaction!.startDist || 1);
+        const newSize = Math.max(8, Math.round(interaction!.startSize * scale));
+        setState({ icons: getState().icons.map(i => i.id === interaction!.id ? { ...i, size: newSize } : i) });
+      }
+    } else if (interaction.mode === 'rotate') {
+      const ic = getState().icons.find(i => i.id === interaction!.id);
+      if (ic) {
+        const angle = Math.atan2(y - ic.y, x - ic.x);
+        const deg = ((angle - interaction!.startAngle) * 180) / Math.PI;
+        const rot = Math.round(interaction!.startRot + deg);
+        setState({ icons: getState().icons.map(i => i.id === interaction!.id ? { ...i, rotation: rot } : i) });
+      }
+    }
+  }, [updateCursor]);
+
+  const mu = useCallback(() => {
+    interaction = null;
+    if (wrapRef.current) wrapRef.current.style.cursor = 'default';
+  }, []);
 
   const drop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -196,20 +336,33 @@ export function PatternCanvas() {
   }, []);
 
   const s = getState();
+  const zoomPct = Math.round(s.viewportZoom * 100);
   return (
     <div className="canvas-area" ref={wrapRef} onWheel={handleWheel}>
       <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         onDrop={drop} onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
         onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu} />
       <div className="canvas-overlay">
-        {s.canvasWidth}x{s.canvasHeight} {Math.round(s.viewportZoom * 100)}%
+        {s.canvasWidth}x{s.canvasHeight}
         {s.icons.length > 0 ? ` ${s.icons.length} icons` : 'Click an icon to place it'}
+      </div>
+      <div className="zoom-controls">
+        <button className="zoom-btn" onClick={() => { const z = getState().viewportZoom; setState({ viewportZoom: Math.round(Math.max(0.1, z - 0.1) * 100) / 100 }); }}>&minus;</button>
+        <span className="zoom-label">{zoomPct}%</span>
+        <button className="zoom-btn" onClick={() => { const z = getState().viewportZoom; setState({ viewportZoom: Math.round(Math.min(5, z + 0.1) * 100) / 100 }); }}>+</button>
+        <button className="zoom-btn" onClick={() => setState({ viewportZoom: 1 })}>1:1</button>
+        <button className="zoom-btn" onClick={() => {
+          const st = getState();
+          const areaW = window.innerWidth - 510;
+          const areaH = window.innerHeight - 60;
+          const fit = Math.min(1, areaW / st.canvasWidth, areaH / st.canvasHeight);
+          setState({ viewportZoom: Math.round(fit * 100) / 100 });
+        }}>Fit</button>
       </div>
     </div>
   );
 }
 
-// Helper to ensure placed icons are loaded
 async function ensurePlacedIcons() {
   const s = getState();
   for (const ic of s.icons) {
