@@ -1,5 +1,7 @@
 # Vitrum
 
+![Vitrum Screenshot](image.png)
+
 **Seamless pattern maker with liquid glass design** — a desktop app built with Electron, React, TypeScript, and Canvas for creating beautiful repeating patterns from SVG icons.
 
 ---
