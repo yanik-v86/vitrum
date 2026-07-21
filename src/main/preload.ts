@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadPacks: () => ipcRenderer.invoke('loadPacks'),
   deletePack: (n: string) => ipcRenderer.invoke('deletePack', n),
   loadDefaultIcons: () => ipcRenderer.invoke('loadDefaultIcons'),
+  savePng: (dataUrl: string, defaultName: string) => ipcRenderer.invoke('savePng', dataUrl, defaultName),
 });

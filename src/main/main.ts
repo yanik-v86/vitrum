@@ -90,6 +90,18 @@ ipcMain.handle('deletePack', async (_event, name: string) => {
   if (fs.existsSync(p)) fs.unlinkSync(p);
 });
 
+// ── Save PNG via native dialog ──
+ipcMain.handle('savePng', async (_event, dataUrl: string, defaultName: string) => {
+  const r = await dialog.showSaveDialog(mainWindow!, {
+    defaultPath: defaultName,
+    filters: [{ name: 'PNG Image', extensions: ['png'] }],
+  });
+  if (r.canceled || !r.filePath) return false;
+  const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
+  fs.writeFileSync(r.filePath, Buffer.from(base64, 'base64'));
+  return true;
+});
+
 // ── Load default icons: return {name, dataUrl} for EVERY icon ──
 // Fully async I/O — reads ~7000 SVGs without blocking the main process
 ipcMain.handle('loadDefaultIcons', async () => {

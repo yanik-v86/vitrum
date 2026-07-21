@@ -20,6 +20,7 @@ function loadImg(src: string): Promise<HTMLImageElement> {
 }
 
 function fillBg(ctx: CanvasRenderingContext2D, w: number, h: number, s: PatternState) {
+  if (s.transparentBg) { drawChecker(ctx, 0, 0, w, h); return; }
   if (s.useGradient && s.backgroundGradient.length >= 2) {
     const rad = (s.gradientAngle * Math.PI) / 180;
     const len = Math.max(w, h) * 1.5;
@@ -88,10 +89,26 @@ function drawIcon(ctx: CanvasRenderingContext2D, img: HTMLImageElement, ic: Patt
   ctx.restore();
 }
 
+function drawChecker(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const sz = 10;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  for (let row = 0; row * sz < h; row++) {
+    for (let col = 0; col * sz < w; col++) {
+      ctx.fillStyle = ((col + row) % 2 === 0) ? '#cccccc' : '#ffffff';
+      ctx.fillRect(x + col * sz, y + row * sz, sz, sz);
+    }
+  }
+  ctx.restore();
+}
+
 function doRender(canvas: HTMLCanvasElement, vw: number, vh: number) {
   const ctx = canvas.getContext('2d');
   if (!ctx || vw < 1 || vh < 1) return;
   if (canvas.width !== vw || canvas.height !== vh) { canvas.width = vw; canvas.height = vh; }
+  ctx.clearRect(0, 0, vw, vh);
 
   const s = getState();
   const z = s.viewportZoom, cw = s.canvasWidth, ch = s.canvasHeight;
@@ -178,8 +195,11 @@ function doRender(canvas: HTMLCanvasElement, vw: number, vh: number) {
   }
   ctx.restore();
 
-  // 4) Canvas border
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  // 4) Canvas border — dark outline + light inner for visibility on any background
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ox - 1, oy - 1, cw * z + 2, ch * z + 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(ox, oy, cw * z, ch * z);
 }

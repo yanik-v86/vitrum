@@ -335,6 +335,15 @@ input[type="text"] { text-align: left; padding: 0 8px; }
 }
 .pack-item-delete:hover { color: #ff5f57; background: rgba(255,95,87,0.1); }
 
+.packs-scroll {
+  max-height: 140px; overflow-y: auto; overflow-x: hidden;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;
+  position: relative; z-index: 1;
+}
+.packs-scroll::-webkit-scrollbar { width: 3px; }
+.packs-scroll::-webkit-scrollbar-track { background: transparent; }
+.packs-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
 /* ──────────────── MISC ──────────────── */
 .empty-state {
   text-align: center; padding: 24px 12px;

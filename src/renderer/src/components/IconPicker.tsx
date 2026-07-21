@@ -14,17 +14,25 @@ export function IconPicker() {
   React.useEffect(() => subscribe(() => tick(n => n + 1)), []);
   React.useEffect(() => { setVisible(BATCH); }, [getState().activePack]);
 
-  // Auto-load defaults
+  // Auto-load defaults + all saved packs
   React.useEffect(() => {
     if (loaded) return;
     (async () => {
       try {
-        const defs = await window.electronAPI.loadDefaultIcons();
-        if (defs.length > 0) {
-          setState({ packs: defs });
-          const first = defs.find(p => p.name === 'lucide') || defs[0];
-          if (first) setState({ activePack: first.name, availableIcons: first.icons });
+        const [defs, savedPacks] = await Promise.all([
+          window.electronAPI.loadDefaultIcons(),
+          window.electronAPI.loadPacks(),
+        ]);
+        const allPacks = [...defs];
+        // Merge saved packs — skip duplicates that already exist in defaults
+        for (const sp of savedPacks) {
+          if (!allPacks.find(p => p.name === sp.name)) {
+            allPacks.push(sp);
+          }
         }
+        setState({ packs: allPacks });
+        const first = defs.find(p => p.name === 'lucide') || defs[0];
+        if (first) setState({ activePack: first.name, availableIcons: first.icons });
       } catch {}
       setLoaded(true);
     })();
@@ -49,11 +57,21 @@ export function IconPicker() {
       const files = await window.electronAPI.readFolder(folder);
       const icons: { name: string; dataUrl: string }[] = [];
       for (const f of files) {
-        const du = await window.electronAPI.readFileAsDataUrl(f.path);
-        if (du) icons.push({ name: f.name, dataUrl: du });
+        try {
+          const du = await window.electronAPI.readFileAsDataUrl(f.path);
+          if (du) icons.push({ name: f.name, dataUrl: du });
+        } catch {}
       }
-      setState({ availableIcons: [...getState().availableIcons, ...icons] });
-    } finally { setLoading(false); }
+      if (icons.length > 0) {
+        setState({ availableIcons: icons, activePack: 'Imported' });
+        setVisible(BATCH);
+        // Auto-save as "Imported" pack
+        try {
+          await window.electronAPI.savePack({ name: 'Imported', icons });
+          setState({ packs: [...getState().packs.filter((p: any) => p.name !== 'Imported'), { name: 'Imported', icons }] });
+        } catch {}
+      }
+    } catch {} finally { setLoading(false); }
   }, []);
 
   const importFiles = useCallback(async () => {
@@ -63,19 +81,33 @@ export function IconPicker() {
     try {
       const icons: { name: string; dataUrl: string }[] = [];
       for (const fp of files) {
-        const du = await window.electronAPI.readFileAsDataUrl(fp);
-        if (du) icons.push({ name: fp.split('/').pop() || 'icon', dataUrl: du });
+        try {
+          const du = await window.electronAPI.readFileAsDataUrl(fp);
+          if (du) icons.push({ name: fp.split('/').pop() || 'icon', dataUrl: du });
+        } catch {}
       }
-      setState({ availableIcons: [...getState().availableIcons, ...icons] });
-    } finally { setLoading(false); }
+      if (icons.length > 0) {
+        setState({ availableIcons: icons, activePack: 'Imported' });
+        setVisible(BATCH);
+        // Auto-save as "Imported" pack
+        try {
+          await window.electronAPI.savePack({ name: 'Imported', icons });
+          setState({ packs: [...getState().packs.filter((p: any) => p.name !== 'Imported'), { name: 'Imported', icons }] });
+        } catch {}
+      }
+    } catch {} finally { setLoading(false); }
   }, []);
 
   const savePack = useCallback(async () => {
     if (total === 0 || !packName.trim()) return;
-    await window.electronAPI.savePack({ name: packName.trim(), icons: getState().availableIcons });
-    setState({ packs: await window.electronAPI.loadPacks() });
+    try {
+      await window.electronAPI.savePack({ name: packName.trim(), icons: getState().availableIcons });
+    } catch {}
+    try {
+      setState({ packs: await window.electronAPI.loadPacks() });
+    } catch {}
     setPackName('');
-  }, [packName]);
+  }, [packName, total]);
 
   const selectPack = useCallback((pack: IconPack) => {
     setState({ activePack: pack.name, availableIcons: pack.icons });
@@ -114,7 +146,7 @@ export function IconPicker() {
             onClick={savePack} disabled={total === 0 || !packName.trim()}>Save</button>
         </div>
         {s.packs.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
+          <div className="packs-scroll">
             {s.packs.map(pack => (
               <div key={pack.name} className={`pack-item ${s.activePack === pack.name ? 'active' : ''}`}
                 onClick={() => selectPack(pack)}>
@@ -130,7 +162,7 @@ export function IconPicker() {
 
       <div className="sidebar-section" style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div className="sidebar-section-title">
-          {s.activePack ? `${s.activePack} (${total})` : `Icons (${total})`}
+          {s.activePack ? `${s.activePack} (${total})` : total > 0 ? `Imported (${total})` : 'Icons'}
         </div>
         {total === 0 ? (
           <div className="empty-state">

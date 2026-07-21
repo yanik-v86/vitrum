@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { getState, setState, subscribe, PatternIcon } from '../store/useStore';
 
 export function Sidebar() {
@@ -44,8 +44,13 @@ export function Sidebar() {
           <button className={`toggle ${s.useGradient ? 'active' : ''}`}
             onClick={() => setState({ useGradient: !s.useGradient })} />
         </div>
+        <div className="toggle-row">
+          <span className="control-label">Transparent</span>
+          <button className={`toggle ${s.transparentBg ? 'active' : ''}`}
+            onClick={() => setState({ transparentBg: !s.transparentBg })} />
+        </div>
 
-        {!s.useGradient ? (
+        {!s.transparentBg && !s.useGradient ? (
           <div className="control-row">
             <span className="control-label">Color</span>
             <div className="color-swatch" style={{ background: s.backgroundColor }}>
@@ -53,7 +58,7 @@ export function Sidebar() {
                 onChange={(e) => setState({ backgroundColor: e.target.value })} />
             </div>
           </div>
-        ) : (
+        ) : (!s.transparentBg && s.useGradient ? (
           <>
             <div className="control-row">
               <span className="control-label">Angle</span>
@@ -63,7 +68,7 @@ export function Sidebar() {
             </div>
             <GradientEditor />
           </>
-        )}
+        ) : null)}
       </Section>
 
       {/* Pattern Icons */}
@@ -87,6 +92,8 @@ export function Sidebar() {
             onClick={() => setState({ useIconColor: !s.useIconColor })}
             style={{ marginLeft: 'auto' }} />
         </div>
+
+        <PatternPreview />
       </Section>
 
       {/* Selected Icon */}
@@ -189,32 +196,151 @@ function GradientEditor() {
 
 /* ── Export helpers ── */
 
-function handleExport() {
-  const canvas = document.querySelector('.pattern-canvas') as HTMLCanvasElement | null;
-  if (!canvas) return;
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = 'pattern.png';
-  a.click();
+const exportImgCache = new Map<string, HTMLImageElement>();
+
+function loadExportImg(src: string): Promise<HTMLImageElement> {
+  const cached = exportImgCache.get(src);
+  if (cached) return Promise.resolve(cached);
+  return new Promise((ok) => {
+    const i = new Image();
+    i.onload = () => { exportImgCache.set(src, i); ok(i); };
+    i.src = src;
+  });
 }
 
-function handleExportTile() {
-  const canvas = document.querySelector('.pattern-canvas') as HTMLCanvasElement | null;
-  if (!canvas) return;
-  const s = getState();
-  const tileSize = s.iconSpacing * 2;
+function renderPattern(w: number, h: number): HTMLCanvasElement {
   const tmp = document.createElement('canvas');
-  tmp.width = tileSize;
-  tmp.height = tileSize;
+  tmp.width = w; tmp.height = h;
   const ctx = tmp.getContext('2d')!;
-  // Draw a section from the center of the canvas
-  const cx = canvas.width / 2 - tileSize / 2;
-  const cy = canvas.height / 2 - tileSize / 2;
-  ctx.drawImage(canvas, cx, cy, tileSize, tileSize, 0, 0, tileSize, tileSize);
-  const a = document.createElement('a');
-  a.href = tmp.toDataURL('image/png');
-  a.download = 'pattern-tile.png';
-  a.click();
+  const s = getState();
+
+  // Background
+  if (!s.transparentBg) {
+    if (s.useGradient && s.backgroundGradient.length >= 2) {
+      const rad = (s.gradientAngle * Math.PI) / 180;
+      const len = Math.max(w, h) * 1.5;
+      const g = ctx.createLinearGradient(
+        w / 2 - Math.cos(rad) * len, h / 2 - Math.sin(rad) * len,
+        w / 2 + Math.cos(rad) * len, h / 2 + Math.sin(rad) * len
+      );
+      s.backgroundGradient.forEach(st => g.addColorStop(Math.max(0, Math.min(1, st.position / 100)), st.color));
+      ctx.fillStyle = g;
+    } else {
+      ctx.fillStyle = s.backgroundColor;
+    }
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Icons
+  for (const ic of s.icons) {
+    const img = exportImgCache.get(ic.dataUrl);
+    if (!img) continue;
+    ctx.save();
+    ctx.globalAlpha = ic.opacity;
+    ctx.translate(ic.x, ic.y);
+    ctx.rotate((ic.rotation * Math.PI) / 180);
+    const half = ic.size / 2;
+    if (s.useIconColor) {
+      const colorCanvas = document.createElement('canvas');
+      colorCanvas.width = ic.size; colorCanvas.height = ic.size;
+      const cc = colorCanvas.getContext('2d')!;
+      cc.drawImage(img, 0, 0, ic.size, ic.size);
+      cc.globalCompositeOperation = 'source-in';
+      cc.fillStyle = s.iconColor;
+      cc.fillRect(0, 0, ic.size, ic.size);
+      ctx.drawImage(colorCanvas, -half, -half);
+    } else {
+      ctx.drawImage(img, -half, -half, ic.size, ic.size);
+    }
+    ctx.restore();
+  }
+  return tmp;
+}
+
+function downloadCanvas(canvas: HTMLCanvasElement, name: string) {
+  const dataUrl = canvas.toDataURL('image/png');
+  (window as any).electronAPI?.savePng(dataUrl, name);
+}
+
+async function handleExport() {
+  const s = getState();
+  // Preload all icon images
+  await Promise.all(s.icons.map(ic => loadExportImg(ic.dataUrl)));
+  const canvas = renderPattern(s.canvasWidth, s.canvasHeight);
+  downloadCanvas(canvas, 'pattern.png');
+}
+
+async function handleExportTile() {
+  const s = getState();
+  await Promise.all(s.icons.map(ic => loadExportImg(ic.dataUrl)));
+  const canvas = renderPattern(s.canvasWidth, s.canvasHeight);
+  downloadCanvas(canvas, 'pattern-tile.png');
 }
 
 function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v || min)); }
+
+const previewImgCache = new Map<string, HTMLImageElement>();
+
+function PatternPreview() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [, tick] = React.useState(0);
+
+  useEffect(() => subscribe(() => tick(n => n + 1)), []);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    const s = getState();
+    const w = 120, h = 120;
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+
+    // Checkerboard background
+    const sz = 10;
+    for (let y = 0; y < h; y += sz) {
+      for (let x = 0; x < w; x += sz) {
+        ctx.fillStyle = ((x / sz + y / sz) % 2 === 0) ? '#1a1a2e' : '#16162a';
+        ctx.fillRect(x, y, sz, sz);
+      }
+    }
+
+    // Draw first available icon with current pattern settings
+    if (s.availableIcons.length === 0) return;
+    const du = s.availableIcons[0].dataUrl;
+    let img = previewImgCache.get(du);
+    if (!img) {
+      img = new Image();
+      img.onload = () => { previewImgCache.set(du, img!); tick(n => n + 1); };
+      img.src = du;
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate((s.iconRotation * Math.PI) / 180);
+    ctx.globalAlpha = s.iconOpacity;
+    const half = s.iconSize / 2;
+    if (s.useIconColor) {
+      // Recolor on temp canvas
+      const tmp = document.createElement('canvas');
+      tmp.width = s.iconSize; tmp.height = s.iconSize;
+      const tc = tmp.getContext('2d')!;
+      tc.drawImage(img, 0, 0, s.iconSize, s.iconSize);
+      tc.globalCompositeOperation = 'source-in';
+      tc.fillStyle = s.iconColor;
+      tc.fillRect(0, 0, s.iconSize, s.iconSize);
+      ctx.drawImage(tmp, -half, -half);
+    } else {
+      ctx.drawImage(img, -half, -half, s.iconSize, s.iconSize);
+    }
+    ctx.restore();
+  });
+
+  return (
+    <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Preview</div>
+      <canvas ref={canvasRef} style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }} />
+    </div>
+  );
+}

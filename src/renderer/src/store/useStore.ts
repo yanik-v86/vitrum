@@ -12,6 +12,7 @@ export interface PatternState {
   backgroundGradient: GradientStop[];
   gradientAngle: number;
   useGradient: boolean;
+  transparentBg: boolean;
   canvasWidth: number; canvasHeight: number;
   iconSpacing: number; iconOpacity: number; iconSize: number;
   iconColor: string; useIconColor: boolean; iconRotation: number;
@@ -25,7 +26,7 @@ export const defaultState: PatternState = {
   icons: [], selectedIconId: null,
   backgroundColor: '#f5c518',
   backgroundGradient: [{ color: '#f5c518', position: 0 }, { color: '#e6b800', position: 100 }],
-  gradientAngle: 135, useGradient: false,
+  gradientAngle: 135, useGradient: false, transparentBg: false,
   canvasWidth: 300, canvasHeight: 300,
   iconSpacing: 60, iconOpacity: 0.5, iconSize: 32,
   iconColor: '#ffffff', useIconColor: true, iconRotation: 0,
