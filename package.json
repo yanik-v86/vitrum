@@ -1,0 +1,27 @@
+{
+  "name": "pattern-glass",
+  "version": "1.0.0",
+  "description": "Seamless pattern maker with liquid glass design",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc && node build.mjs",
+    "start": "npm run build && electron --no-sandbox --disable-gpu --in-process-gpu dist/main/main.js",
+    "dev": "npm run build && electron --no-sandbox --disable-gpu --in-process-gpu dist/main/main.js"
+  },
+  "dependencies": {
+    "lucide-static": "^1.25.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "electron": "^33.4.11",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.7.2"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "esbuild@0.28.1": true
+  }
+}
