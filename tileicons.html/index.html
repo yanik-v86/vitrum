@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tile Icons — Liquid Glass</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --glass-blur:16px;--glass-sat:140%;--glass-bg:rgba(255,255,255,.08);
+  --glass-border:rgba(255,255,255,.15);--glass-shadow:0 8px 32px rgba(0,0,0,.25);
+  --radius:20px;--radius-sm:14px;--radius-xs:10px;
+  --accent:#7f5af0;--accent2:#2cb67d;--text:#fff;--text-dim:rgba(255,255,255,.6);
+  --bg:#0f0c29;--surface:rgba(255,255,255,.06);
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
+}
+
+/* ===== ANIMATED BG ===== */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.55;animation:fl 10s ease-in-out infinite alternate}
+.b1{width:500px;height:500px;background:#7f5af0;top:-15%;left:5%;animation-delay:0s}
+.b2{width:400px;height:400px;background:#2cb67d;bottom:-10%;right:5%;animation-delay:-3s}
+.b3{width:350px;height:350px;background:#e16162;top:40%;left:45%;animation-delay:-5s}
+.b4{width:250px;height:250px;background:#f5a623;top:10%;right:20%;animation-delay:-1s}
+@keyframes fl{0%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.08)}100%{transform:translate(-20px,20px) scale(.95)}}
+
+/* ===== GLASS MIXIN ===== */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow),inset 0 1px 0 rgba(255,255,255,.1);
+  border-radius:var(--radius);
+}
+.glass-sm{border-radius:var(--radius-sm)}
+.glass-xs{border-radius:var(--radius-xs)}
+
+/* ===== LAYOUT ===== */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh}
+
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;gap:12px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.2);backdrop-filter:blur(20px);
+}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.5px}
+.topbar-brand i{color:var(--accent);font-size:20px}
+.topbar-actions{display:flex;gap:8px}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border:none;border-radius:var(--radius-xs);
+  font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .2s;color:var(--text);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+}
+.btn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2)}
+.btn:active{transform:scale(.96)}
+.btn-accent{background:var(--accent);border-color:var(--accent)}
+.btn-accent:hover{background:#6b46d4}
+.btn-danger{background:rgba(225,97,98,.2);border-color:rgba(225,97,98,.3);color:#e16162}
+.btn-danger:hover{background:rgba(225,97,98,.35)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:8px;width:36px;justify-content:center}
+.btn.active{background:var(--accent);border-color:var(--accent)}
+
+/* MAIN AREA */
+.main{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* LEFT PANEL */
+.panel-left{
+  width:280px;flex-shrink:0;overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.15);backdrop-filter:blur(12px);
+  padding:16px;display:flex;flex-direction:column;gap:16px;
+}
+.panel-left::-webkit-scrollbar{width:4px}
+.panel-left::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+
+/* RIGHT PANEL */
+.panel-right{
+  width:260px;flex-shrink:0;overflow-y:auto;
+  border-left:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.15);backdrop-filter:blur(12px);
+  padding:16px;display:flex;flex-direction:column;gap:16px;
+}
+.panel-right::-webkit-scrollbar{width:4px}
+.panel-right::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+
+/* CENTER */
+.center{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;align-items:center;gap:6px;padding:8px 16px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.1);overflow-x:auto;
+}
+.toolbar-sep{width:1px;height:24px;background:rgba(255,255,255,.1);margin:0 4px;flex-shrink:0}
+
+/* CANVAS AREA */
+.canvas-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  background-repeat:repeat;
+}
+#tileCanvas{
+  border-radius:2px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 8px 40px rgba(0,0,0,.4);
+  cursor:crosshair;
+  position:relative;z-index:1;
+}
+
+/* ZOOM */
+.zoom-bar{
+  position:absolute;bottom:16px;right:16px;
+  display:flex;align-items:center;gap:4px;
+  padding:6px 10px;
+}
+.zoom-bar .btn{padding:6px 10px;font-size:12px}
+.zoom-readout{font-size:12px;color:var(--text-dim);min-width:40px;text-align:center}
+
+/* PANEL SECTIONS */
+.section-title{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;
+}
+.section-desc{font-size:12px;color:var(--text-dim);margin-bottom:8px;line-height:1.4}
+
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-row>div{flex:1}
+.form-label{font-size:11px;color:var(--text-dim);margin-bottom:3px;display:block}
+.form-input,.form-select{
+  width:100%;padding:7px 10px;font-size:12px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--radius-xs);color:var(--text);outline:none;
+}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-select{cursor:pointer;-webkit-appearance:none}
+.form-select option{background:#1a1a2e;color:#fff}
+.form-range{width:100%;accent-color:var(--accent);height:4px}
+.form-color{width:100%;height:32px;border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xs);cursor:pointer;background:transparent;padding:2px}
+.form-check{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}
+.form-check input{accent-color:var(--accent)}
+
+/* ICON GRID */
+.icon-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+}
+.icon-cell{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;cursor:grab;font-size:18px;
+  background:rgba(255,255,255,.04);border:1px solid transparent;
+  transition:all .15s;color:var(--text-dim);
+}
+.icon-cell:hover{background:rgba(127,90,240,.2);border-color:var(--accent);color:#fff;transform:scale(1.08)}
+.icon-cell:active{cursor:grabbing;transform:scale(.95)}
+.icon-cell.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.icon-search{position:relative}
+.icon-search input{padding-left:32px}
+.icon-search i{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-dim)}
+
+/* ICON CATEGORIES */
+.icon-cat{margin-bottom:8px}
+.icon-cat-title{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600}
+
+/* EXPORT PANEL */
+.export-section{padding:12px}
+.export-format{display:flex;gap:6px;margin-bottom:12px}
+.export-format .btn{flex:1;justify-content:center}
+
+/* COLOR PICKER POPOVER */
+.color-popover{
+  position:absolute;z-index:100;padding:12px;
+  min-width:200px;display:none;
+}
+.color-popover.show{display:block}
+
+/* SELECTION BOX */
+#selectionBox{position:absolute;border:1px dashed var(--accent);background:rgba(127,90,240,.1);pointer-events:none;display:none;z-index:10}
+
+/* DRAG GHOST */
+.drag-ghost{
+  position:fixed;pointer-events:none;z-index:9999;
+  font-size:28px;color:var(--accent);opacity:.8;
+  filter:drop-shadow(0 4px 12px rgba(127,90,240,.4));
+}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:10px 20px;font-size:13px;z-index:9999;
+  animation:toastIn .3s ease,toastOut .3s ease 2.5s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(20px)}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .panel-left,.panel-right{display:none}
+  .panel-left.mobile-open,.panel-right.mobile-open{display:flex;position:absolute;top:0;bottom:0;z-index:50;width:280px}
+  .panel-left.mobile-open{left:0}
+  .panel-right.mobile-open{right:0}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-brand"><i class="fa-solid fa-border-all"></i> Tile Icons</div>
+    <div class="topbar-actions">
+      <button class="btn btn-sm" id="btnToggleLeft" title="Settings"><i class="fa-solid fa-sliders"></i> Settings</button>
+      <button class="btn btn-sm" id="btnToggleRight" title="Icons"><i class="fa-regular fa-folder-open"></i> Icons</button>
+      <button class="btn btn-sm btn-accent" id="btnExport" title="Export"><i class="fa-solid fa-download"></i> Export</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT PANEL: SETTINGS -->
+    <div class="panel-left" id="panelLeft">
+      <div>
+        <div class="section-title">Canvas</div>
+        <div class="section-desc">Tile dimensions and display.</div>
+        <div class="form-row">
+          <div><label class="form-label">Width</label><input class="form-input" id="tileW" type="number" min="64" max="1024" value="320"></div>
+          <div><label class="form-label">Height</label><input class="form-input" id="tileH" type="number" min="64" max="1024" value="320"></div>
+        </div>
+        <div class="form-row">
+          <div><label class="form-label">Max icons</label><input class="form-input" id="maxIcons" type="number" min="5" max="500" value="150"></div>
+          <div><label class="form-label">Dim BG</label>
+            <select class="form-select" id="dimBg"><option value="1">Off</option><option value="0.35" selected>On</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1"><button class="btn btn-sm" style="width:100%" id="btnRefresh"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
+          <div style="flex:1"><button class="btn btn-sm btn-danger" style="width:100%" id="btnClear"><i class="fa-regular fa-trash-can"></i> Clear</button></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Background</div>
+        <div class="section-desc">Tile background style.</div>
+        <div style="margin-bottom:8px">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="bgType"><option value="solid">Solid</option><option value="gradient">Gradient</option><option value="transparent">Transparent</option></select>
+        </div>
+        <div class="form-row">
+          <div><label class="form-label">Colour A</label><input class="form-color" id="bgColorA" type="color" value="#ffffff"></div>
+          <div><label class="form-label">Colour B</label><input class="form-color" id="bgColorB" type="color" value="#dbeafe"></div>
+        </div>
+        <div><label class="form-label">Angle</label><input class="form-range" id="bgAngle" type="range" min="0" max="360" value="45"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Icon Defaults</div>
+        <div class="section-desc">Default colour for new icons.</div>
+        <div class="form-row">
+          <div><label class="form-label">Colour</label><input class="form-color" id="defIconColor" type="color" value="#7f5af0"></div>
+          <div><label class="form-label">Opacity</label><input class="form-range" id="defIconOpacity" type="range" min="0.05" max="1" step="0.05" value="1"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Snapping</div>
+        <div class="section-desc">Placement behaviour.</div>
+        <label class="form-check" style="margin-bottom:8px"><input type="checkbox" id="snapEnabled" checked> Enable snapping</label>
+        <div><label class="form-label">Spacing</label><input class="form-input" id="snapSpacing" type="number" min="0" max="200" value="20"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Random Pattern</div>
+        <div class="section-desc">Quickly generate a starter pattern.</div>
+        <div class="form-row">
+          <div><label class="form-label">Count</label><input class="form-input" id="randCount" type="number" min="1" max="150" value="12"></div>
+          <div><label class="form-label">Density</label><input class="form-range" id="randDensity" type="range" min="1" max="10" value="5"></div>
+        </div>
+        <div class="form-row">
+          <div><label class="form-label">Min scale</label><input class="form-input" id="randMinS" type="number" min="0.2" max="5" step="0.1" value="0.8"></div>
+          <div><label class="form-label">Max scale</label><input class="form-input" id="randMaxS" type="number" min="0.2" max="5" step="0.1" value="1.4"></div>
+        </div>
+        <div style="margin-bottom:8px"><label class="form-label">Rotation</label><input class="form-range" id="randRot" type="range" min="0" max="180" value="45"></div>
+        <label class="form-check" style="margin-bottom:8px"><input type="checkbox" id="randKeep"> Keep existing</label>
+        <button class="btn btn-sm" style="width:100%" id="btnRandom"><i class="fa-solid fa-shuffle"></i> Generate</button>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center">
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <button class="btn btn-sm btn-icon" id="btnUndo" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnRedo" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm btn-icon" id="btnClone" title="Clone"><i class="fa-regular fa-clone"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnDelete" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnReset" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm" id="btnTbColor"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-right:4px" id="tbColorChip"></span> Colour</button>
+        <button class="btn btn-sm" id="btnTbOpacity"><i class="fa-solid fa-circle-half-stroke"></i> Opacity</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm btn-icon" id="btnAlignL" title="Align left"><i class="fa-solid fa-align-left"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnAlignC" title="Align center"><i class="fa-solid fa-align-center"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnAlignR" title="Align right"><i class="fa-solid fa-align-right"></i></button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm btn-icon" id="btnAlignT" title="Align top"><i class="fa-solid fa-align-left" style="transform:rotate(90deg)"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnAlignM" title="Align middle"><i class="fa-solid fa-align-center" style="transform:rotate(90deg)"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnAlignB" title="Align bottom"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i></button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm btn-icon" id="btnDistH" title="Distribute H"><i class="fa-solid fa-distribute-spacing-horizontal"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnDistV" title="Distribute V"><i class="fa-solid fa-distribute-spacing-vertical"></i></button>
+      </div>
+
+      <!-- CANVAS -->
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="tileCanvas" width="320" height="320"></canvas>
+        <div id="selectionBox"></div>
+      </div>
+
+      <!-- ZOOM -->
+      <div class="zoom-bar glass glass-xs">
+        <button class="btn btn-sm btn-icon" id="btnZoomIn"><i class="fa-solid fa-plus"></i></button>
+        <span class="zoom-readout" id="zoomReadout">100%</span>
+        <button class="btn btn-sm btn-icon" id="btnZoomOut"><i class="fa-solid fa-minus"></i></button>
+        <button class="btn btn-sm btn-icon" id="btnZoomFit"><i class="fa-solid fa-expand"></i></button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: ICONS -->
+    <div class="panel-right" id="panelRight">
+      <div>
+        <div class="section-title">Icon Library</div>
+        <div class="icon-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="form-input" id="iconSearch" placeholder="Search icons..." style="padding-left:32px">
+        </div>
+        <div class="form-row" style="margin-top:8px;margin-bottom:4px">
+          <div><label class="form-label">Style</label>
+            <select class="form-select" id="iconStyle">
+              <option value="solid">Solid</option>
+              <option value="regular" selected>Regular</option>
+              <option value="brands">Brands</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;min-height:0" id="iconScroll">
+        <div id="iconGrid" class="icon-grid"></div>
+      </div>
+
+      <div>
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Custom SVG</span><span style="font-weight:400;font-size:10px;color:var(--text-dim)" id="customCount">0/12</span>
+        </div>
+        <input type="file" id="customUpload" accept=".svg,image/svg+xml" class="form-input" style="font-size:11px;padding:5px 8px;margin-bottom:6px">
+        <div id="customGrid" class="icon-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center">
+  <div class="glass" style="width:420px;max-width:90vw;padding:24px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-title" style="font-size:14px;letter-spacing:0;text-transform:none">Export</div>
+      <button class="btn btn-sm btn-icon" id="btnCloseExport"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="form-label">Format</label>
+      <div class="export-format">
+        <button class="btn btn-sm active" data-fmt="svg">SVG</button>
+        <button class="btn btn-sm" data-fmt="png">PNG</button>
+        <button class="btn btn-sm" data-fmt="webp">WEBP</button>
+      </div>
+    </div>
+    <button class="btn btn-accent" style="width:100%;justify-content:center;margin-bottom:12px" id="btnDownload"><i class="fa-solid fa-download"></i> Download</button>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm" style="flex:1;justify-content:center" id="btnSaveJson"><i class="fa-regular fa-floppy-disk"></i> Save JSON</button>
+      <button class="btn btn-sm" style="flex:1;justify-content:center" id="btnLoadJson"><i class="fa-regular fa-folder-open"></i> Load JSON</button>
+    </div>
+    <input type="file" id="jsonFileInput" accept="application/json" style="display:none">
+    <button class="btn btn-sm" style="width:100%;justify-content:center;margin-bottom:12px" id="btnDataUri"><i class="fa-solid fa-link"></i> Generate Data URI</button>
+    <div id="dataUriBox" style="display:none;margin-bottom:12px">
+      <label class="form-label">Data URI</label>
+      <textarea class="form-input" id="dataUriOut" rows="3" style="resize:vertical;font-family:monospace;font-size:10px"></textarea>
+    </div>
+    <button class="btn btn-sm" style="width:100%;justify-content:center" id="btnCss"><i class="fa-solid fa-code"></i> Generate CSS</button>
+    <div id="cssBox" style="display:none;margin-top:8px">
+      <label class="form-label">CSS</label>
+      <textarea class="form-input" id="cssOut" rows="4" style="resize:vertical;font-family:monospace;font-size:10px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- COLOR POPOVER -->
+<div class="color-popover glass" id="colorPopover">
+  <label class="form-label">Colour</label>
+  <input class="form-color" id="popColor" type="color" value="#7f5af0">
+  <label class="form-label" style="margin-top:8px">Opacity</label>
+  <input class="form-range" id="popOpacity" type="range" min="0.05" max="1" step="0.05" value="1">
+</div>
+
+<!-- DRAG GHOST -->
+<div class="drag-ghost" id="dragGhost" style="display:none"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ===== STATE ===== */
+const S = {
+  icons: [],          // placed icons: {id, glyph, x, y, scale, rotation, color, opacity, fontFamily, fontVariant}
+  selected: [],       // indices
+  undo: [], redo: [],
+  zoom: 1,
+  tileW: 320, tileH: 320,
+  bgType: 'solid', bgColorA: '#ffffff', bgColorB: '#dbeafe', bgAngle: 45,
+  dimBg: 0.35,
+  defColor: '#7f5af0', defOpacity: 1,
+  snapEnabled: true, snapSpacing: 20,
+  maxIcons: 150,
+  dragIcon: null, dragOff: {x:0,y:0},
+  selectBox: null,
+  exportFmt: 'svg',
+  customIcons: [],    // {svg, name}
+  nextId: 1,
+};
+
+/* ===== FONT AWESOME ICON SETS ===== */
+const FA_ICONS = {
+  solid: [
+    'fa-house','fa-star','fa-heart','fa-user','fa-gear','fa-bell','fa-envelope','fa-check',
+    'fa-arrow-right','fa-arrow-left','fa-arrow-up','fa-arrow-down','fa-plus','fa-minus',
+    'fa-xmark','fa-magnifying-glass','fa-download','fa-upload','fa-trash','fa-pen',
+    'fa-copy','fa-clone','fa-rotate-left','fa-rotate-right','fa-expand','fa-compress',
+    'fa-play','fa-pause','fa-stop','fa-forward','fa-backward','fa-shuffle','fa-repeat',
+    'fa-bookmark','fa-flag','fa-tag','fa-link','fa-share','fa-eye','fa-eye-slash',
+    'fa-lock','fa-unlock','fa-key','fa-shield','fa-bolt','fa-fire','fa-water',
+    'fa-sun','fa-moon','fa-cloud','fa-snowflake','fa-wind','fa-umbrella',
+    'fa-globe','fa-map','fa-location-dot','fa-compass','fa-route','fa-car','fa-plane',
+    'fa-ship','fa-bicycle','fa-bus','fa-train','fa-rocket','fa-satellite',
+    'fa-camera','fa-image','fa-video','fa-music','fa-microphone','fa-headphones',
+    'fa-phone','fa-comment','fa-comments','fa-address-book','fa-calendar','fa-clock',
+    'fa-hourglass','fa-stopwatch','fa-chart-bar','fa-chart-line','fa-chart-pie','fa-chart-area',
+    'fa-table','fa-list','fa-grip','fa-grip-vertical','fa-bars','fa-ellipsis',
+    'fa-folder','fa-file','fa-file-lines','fa-file-image','fa-file-code','fa-file-zipper',
+    'fa-database','fa-server','fa-cloud','fa-wifi','fa-code','fa-terminal',
+    'fa-laptop','fa-desktop','fa-tablet','fa-mobile','fa-keyboard','fa-print',
+    'fa-cart-shopping','fa-bag-shopping','fa-store','fa-credit-card','fa-wallet','fa-coins',
+    'fa-cart-shopping','fa-tag','fa-percent','fa-gift','fa-ticket','fa-receipt',
+    'fa-utensils','fa-mug-hot','fa-wine-glass','fa-cookie','fa-ice-cream','fa-pepper-hot',
+    'fa-dumbbell','fa-person-running','fa-person-swimming','fa-person-biking','fa-futbol','fa-football',
+    'fa-palette','fa-paintbrush','fa-pen-ruler','fa-ruler','fa-scissors','fa-paperclip',
+    'fa-thumbtack','fa-bullhorn','fa-megaphone','fa-trophy','fa-medal','fa-award',
+    'fa-puzzle-piece','fa-dice','fa-chess','fa-gamepad','fa-masks-theater','fa-magic',
+    'fa-wand-magic-sparkles','fa-hat-wizard','fa-dragon','fa-skull','fa-ghost','fa-robot',
+    'fa-atom','fa-dna','fa-flask','fa-vial','fa-syringe','fa-pills',
+    'fa-stethoscope','fa-heart-pulse','fa-band-aid','fa-temperature-half','fa-x-ray','fa-brain',
+  ],
+  brands: [
+    'fa-github','fa-gitlab','fa-bitbucket','fa-python','fa-js','fa-php','fa-java','fa-html5',
+    'fa-css3-alt','fa-sass','fa-less','fa-react','fa-vuejs','fa-angular','fa-svelte','fa-nextjs',
+    'fa-node-js','fa-npm','fa-yarn','fa-docker','fa-aws','fa-google','fa-microsoft','fa-apple',
+    'fa-facebook','fa-twitter','fa-instagram','fa-youtube','fa-tiktok','fa-linkedin',
+    'fa-discord','fa-slack','fa-steam','fa-twitch','fa-spotify','fa-figma',
+    'fa-sketch','fa-dribbble','fa-behance','fa-deviantart','fa-pinterest','fa-reddit',
+    'fa-tumblr','fa-medium','fa-hashnode','fa-stack-overflow','fa-chrome','fa-firefox',
+    'fa-edge','fa-opera','fa-safari','fa-linux','fa-windows','fa-android',
+  ]
+};
+
+/* ===== DOM ===== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const canvas = $('#tileCanvas');
+const ctx = canvas.getContext('2d');
+const canvasWrap = $('#canvasWrap');
+
+/* ===== INIT ===== */
+function init(){
+  loadIconLibrary();
+  renderIconGrid();
+  renderCustomGrid();
+  resizeCanvas();
+  render();
+  bindEvents();
+}
+
+/* ===== ICON LIBRARY ===== */
+let allIconElems = [];
+function loadIconLibrary(){
+  allIconElems = [];
+  const style = $('#iconStyle').value;
+  const search = $('#iconSearch').value.toLowerCase();
+  const icons = FA_ICONS[style] || FA_ICONS.solid;
+  icons.forEach(cls => {
+    const name = cls.replace('fa-','').replace(/-/g,' ');
+    if(search && !name.includes(search)) return;
+    allIconElems.push({cls, name, style});
+  });
+}
+
+function renderIconGrid(){
+  const grid = $('#iconGrid');
+  grid.innerHTML = '';
+  allIconElems.forEach((icon,i) => {
+    const el = document.createElement('div');
+    el.className = 'icon-cell';
+    el.title = icon.name;
+    el.innerHTML = `<i class="fa-${icon.style === 'brands' ? 'brands' : icon.style} ${icon.cls}"></i>`;
+    el.dataset.cls = icon.cls;
+    el.dataset.style = icon.style;
+    el.addEventListener('mousedown', e => startIconDrag(e, icon));
+    el.addEventListener('click', () => addIconToCenter(icon));
+    grid.appendChild(el);
+  });
+}
+
+function renderCustomGrid(){
+  const grid = $('#customGrid');
+  grid.innerHTML = '';
+  S.customIcons.forEach((ci,i) => {
+    const el = document.createElement('div');
+    el.className = 'icon-cell';
+    el.title = ci.name;
+    el.innerHTML = ci.svg;
+    el.querySelector('svg').setAttribute('width','20');
+    el.querySelector('svg').setAttribute('height','20');
+    el.addEventListener('mousedown', e => startCustomIconDrag(e, ci));
+    el.addEventListener('click', () => addCustomIconToCenter(ci));
+    grid.appendChild(el);
+  });
+  $('#customCount').textContent = S.customIcons.length + '/12';
+}
+
+function addIconToCenter(icon){
+  const fa = icon.style === 'brands' ? 'fa-brands' : `fa-${icon.style}`;
+  pushUndo();
+  S.icons.push({
+    id: S.nextId++,
+    type: 'fa',
+    cls: icon.cls,
+    fontFamily: `'Font Awesome 6 Free'`,
+    fontWeight: icon.style === 'solid' ? 900 : 400,
+    glyph: getGlyph(icon.cls, icon.style),
+    x: S.tileW/2 - 14,
+    y: S.tileH/2 - 14,
+    w: 28, h: 28,
+    scale: 1, rotation: 0,
+    color: S.defColor,
+    opacity: S.defOpacity,
+  });
+  render();
+}
+
+function addCustomIconToCenter(ci){
+  pushUndo();
+  S.icons.push({
+    id: S.nextId++,
+    type: 'custom',
+    svg: ci.svg,
+    x: S.tileW/2 - 14,
+    y: S.tileH/2 - 14,
+    w: 28, h: 28,
+    scale: 1, rotation: 0,
+    color: S.defColor,
+    opacity: S.defOpacity,
+  });
+  render();
+}
+
+function getGlyph(cls, style){
+  // mapping common FA classes to unicode - we'll use CSS rendering instead
+  return cls;
+}
+
+/* ===== DRAG FROM LIBRARY ===== */
+let dragData = null;
+function startIconDrag(e, icon){
+  e.preventDefault();
+  const ghost = $('#dragGhost');
+  const fa = icon.style === 'brands' ? 'fa-brands' : `fa-${icon.style}`;
+  ghost.innerHTML = `<i class="${fa} ${icon.cls}"></i>`;
+  ghost.style.display = 'block';
+  ghost.style.left = e.clientX - 14 + 'px';
+  ghost.style.top = e.clientY - 14 + 'px';
+  dragData = {type:'fa', cls:icon.cls, style:icon.style};
+
+  const onMove = ev => {
+    ghost.style.left = ev.clientX - 14 + 'px';
+    ghost.style.top = ev.clientY - 14 + 'px';
+  };
+  const onUp = ev => {
+    ghost.style.display = 'none';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    // check if dropped on canvas
+    const rect = canvas.getBoundingClientRect();
+    if(ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom){
+      const cx = (ev.clientX - rect.left) / S.zoom;
+      const cy = (ev.clientY - rect.top) / S.zoom;
+      dropIconOnCanvas(dragData, cx - 14, cy - 14);
+    }
+    dragData = null;
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function startCustomIconDrag(e, ci){
+  e.preventDefault();
+  const ghost = $('#dragGhost');
+  ghost.innerHTML = ci.svg;
+  ghost.querySelector('svg').setAttribute('width','28');
+  ghost.querySelector('svg').setAttribute('height','28');
+  ghost.style.display = 'block';
+  ghost.style.left = e.clientX - 14 + 'px';
+  ghost.style.top = e.clientY - 14 + 'px';
+  dragData = {type:'custom', svg:ci.svg};
+
+  const onMove = ev => {
+    ghost.style.left = ev.clientX - 14 + 'px';
+    ghost.style.top = ev.clientY - 14 + 'px';
+  };
+  const onUp = ev => {
+    ghost.style.display = 'none';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    const rect = canvas.getBoundingClientRect();
+    if(ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom){
+      const cx = (ev.clientX - rect.left) / S.zoom;
+      const cy = (ev.clientY - rect.top) / S.zoom;
+      dropIconOnCanvas(dragData, cx - 14, cy - 14);
+    }
+    dragData = null;
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function dropIconOnCanvas(data, x, y){
+  if(S.icons.length >= S.maxIcons){toast('Max icons reached');return}
+  pushUndo();
+  if(S.snapEnabled){
+    x = Math.round(x / S.snapSpacing) * S.snapSpacing;
+    y = Math.round(y / S.snapSpacing) * S.snapSpacing;
+  }
+  if(data.type === 'fa'){
+    const icon = allIconElems.find(i => i.cls === data.cls);
+    S.icons.push({
+      id: S.nextId++, type:'fa', cls:data.cls,
+      fontFamily: `'Font Awesome 6 Free'`,
+      fontWeight: data.style === 'solid' ? 900 : 400,
+      glyph: data.cls, x, y, w:28, h:28, scale:1, rotation:0,
+      color: S.defColor, opacity: S.defOpacity,
+    });
+  } else {
+    S.icons.push({
+      id: S.nextId++, type:'custom', svg:data.svg,
+      x, y, w:28, h:28, scale:1, rotation:0,
+      color: S.defColor, opacity: S.defOpacity,
+    });
+  }
+  render();
+}
+
+/* ===== CANVAS RENDERING ===== */
+function render(){
+  const w = S.tileW, h = S.tileH;
+  canvas.width = w; canvas.height = h;
+  canvas.style.width = w * S.zoom + 'px';
+  canvas.style.height = h * S.zoom + 'px';
+
+  // background
+  ctx.clearRect(0,0,w,h);
+  if(S.bgType === 'solid'){
+    ctx.fillStyle = S.bgColorA;
+    ctx.fillRect(0,0,w,h);
+  } else if(S.bgType === 'gradient'){
+    const rad = S.bgAngle * Math.PI / 180;
+    const cx = w/2 - Math.cos(rad)*w, cy = h/2 - Math.sin(rad)*h;
+    const cx2 = w/2 + Math.cos(rad)*w, cy2 = h/2 + Math.sin(rad)*h;
+    const grad = ctx.createLinearGradient(cx,cy,cx2,cy2);
+    grad.addColorStop(0, S.bgColorA);
+    grad.addColorStop(1, S.bgColorB);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
+  }
+
+  // draw icons
+  S.icons.forEach((icon,i) => {
+    // Draw icon at main position
+    ctx.save();
+    const cx = icon.x + icon.w/2, cy = icon.y + icon.h/2;
+    ctx.translate(cx, cy);
+    ctx.rotate((icon.rotation||0) * Math.PI/180);
+    ctx.scale(icon.scale||1, icon.scale||1);
+    ctx.globalAlpha = icon.opacity||1;
+
+    if(icon.type === 'fa'){
+      ctx.fillStyle = icon.color || '#fff';
+      ctx.font = `${icon.fontWeight||900} ${icon.h}px "Font Awesome 6 Free"`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const unicode = classToUnicode(icon.cls);
+      ctx.fillText(unicode, 0, 0);
+    } else if(icon.type === 'custom' && icon._img){
+      ctx.drawImage(icon._img, -icon.w/2, -icon.h/2, icon.w, icon.h);
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = icon.color || '#fff';
+      ctx.fillRect(-icon.w/2, -icon.h/2, icon.w, icon.h);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+
+    // Wrap preview: show ghost copies at edges for visual cue
+    const edges = [];
+    if(icon.x < 0) edges.push({ox: w});
+    if(icon.x + icon.w * icon.scale > w) edges.push({ox: -w});
+    if(icon.y < 0) edges.push({oy: h});
+    if(icon.y + icon.h * icon.scale > h) edges.push({oy: -h});
+    // corner cases
+    if(edges.length === 2) edges.push({ox: edges[0].ox||0, oy: edges[1].oy||0});
+
+    edges.forEach(e => {
+      ctx.save();
+      ctx.globalAlpha = (icon.opacity||1) * 0.3;
+      ctx.translate(cx + (e.ox||0), cy + (e.oy||0));
+      ctx.rotate((icon.rotation||0) * Math.PI/180);
+      ctx.scale(icon.scale||1, icon.scale||1);
+      if(icon.type === 'fa'){
+        ctx.fillStyle = icon.color || '#fff';
+        ctx.font = `${icon.fontWeight||900} ${icon.h}px "Font Awesome 6 Free"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(classToUnicode(icon.cls), 0, 0);
+      } else if(icon.type === 'custom' && icon._img){
+        ctx.drawImage(icon._img, -icon.w/2, -icon.h/2, icon.w, icon.h);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.fillStyle = icon.color || '#fff';
+        ctx.fillRect(-icon.w/2, -icon.h/2, icon.w, icon.h);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.restore();
+    });
+
+    // selection outline (only on main position)
+    if(S.selected.includes(i)){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(127,90,240,.8)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,3]);
+      ctx.strokeRect(icon.x - 2, icon.y - 2, icon.w*icon.scale + 4, icon.h*icon.scale + 4);
+      ctx.restore();
+    }
+  });
+
+  // --- Update tiled background preview ---
+  updateTiledBackground();
+}
+
+// Generate tiled background from current canvas content
+let _tileBgCanvas = null;
+function updateTiledBackground(){
+  if(!_tileBgCanvas){
+    _tileBgCanvas = document.createElement('canvas');
+  }
+  _tileBgCanvas.width = S.tileW;
+  _tileBgCanvas.height = S.tileH;
+  const tctx = _tileBgCanvas.getContext('2d');
+  tctx.drawImage(canvas, 0, 0);
+  // Dim it
+  tctx.fillStyle = `rgba(0,0,0,${1-S.dimBg})`;
+  tctx.fillRect(0, 0, S.tileW, S.tileH);
+  const dataUrl = _tileBgCanvas.toDataURL('image/png');
+  canvasWrap.style.backgroundImage = `url(${dataUrl})`;
+  canvasWrap.style.backgroundSize = `${S.tileW}px ${S.tileH}px`;
+}
+
+// FA class to unicode mapping
+const _ucMap = {};
+// Fallback unicode map for common FA icons (Font Awesome 6 Free)
+const FA_UNICODE = {
+  'fa-house':'\uf015','fa-star':'\uf005','fa-heart':'\uf004','fa-user':'\uf007',
+  'fa-gear':'\uf013','fa-bell':'\uf0f3','fa-envelope':'\uf0e0','fa-check':'\uf00c',
+  'fa-arrow-right':'\uf061','fa-arrow-left':'\uf060','fa-arrow-up':'\uf062','fa-arrow-down':'\uf063',
+  'fa-plus':'\uf067','fa-minus':'\uf068','fa-xmark':'\uf00d','fa-magnifying-glass':'\uf002',
+  'fa-download':'\uf019','fa-upload':'\uf093','fa-trash':'\uf1f8','fa-pen':'\uf303',
+  'fa-copy':'\uf0c5','fa-clone':'\uf24d','fa-rotate-left':'\uf2ea','fa-rotate-right':'\uf2f9',
+  'fa-expand':'\uf31e','fa-compress':'\uf066','fa-play':'\uf04b','fa-pause':'\uf04c',
+  'fa-stop':'\uf04d','fa-forward':'\uf04e','fa-backward':'\uf04a','fa-shuffle':'\uf074',
+  'fa-repeat':'\uf363','fa-bookmark':'\uf02e','fa-flag':'\uf024','fa-tag':'\uf02b',
+  'fa-link':'\uf0c1','fa-share':'\uf064','fa-eye':'\uf06e','fa-eye-slash':'\uf070',
+  'fa-lock':'\uf023','fa-unlock':'\uf09c','fa-key':'\uf084','fa-shield':'\uf132',
+  'fa-bolt':'\uf0e7','fa-fire':'\uf06d','fa-water':'\uf043','fa-sun':'\uf185',
+  'fa-moon':'\uf186','fa-cloud':'\uf0c2','fa-snowflake':'\uf2dc','fa-wind':'\uf72e',
+  'fa-umbrella':'\uf0e9','fa-globe':'\uf0ac','fa-map':'\uf279','fa-location-dot':'\uf3c5',
+  'fa-compass':'\uf14e','fa-route':'\uf4d7','fa-car':'\uf1b9','fa-plane':'\uf072',
+  'fa-ship':'\uf132','fa-bicycle':'\uf206','fa-bus':'\uf207','fa-train':'\uf238',
+  'fa-rocket':'\uf135','fa-satellite':'\uf7bf','fa-camera':'\uf030','fa-image':'\uf03e',
+  'fa-video':'\uf03d','fa-music':'\uf001','fa-microphone':'\uf130','fa-headphones':'\uf025',
+  'fa-phone':'\uf095','fa-comment':'\uf075','fa-comments':'\uf086','fa-address-book':'\uf2b9',
+  'fa-calendar':'\uf133','fa-clock':'\uf017','fa-hourglass':'\uf254','fa-stopwatch':'\uf2f2',
+  'fa-chart-bar':'\uf080','fa-chart-line':'\uf201','fa-chart-pie':'\uf200','fa-chart-area':'\uf1fe',
+  'fa-table':'\uf0ce','fa-list':'\uf03b','fa-grip':'\uf58d','fa-grip-vertical':'\uf58e',
+  'fa-bars':'\uf0c9','fa-ellipsis':'\uf141','fa-folder':'\uf07b','fa-file':'\uf15b',
+  'fa-file-lines':'\uf15c','fa-file-image':'\uf1c5','fa-file-code':'\uf1c9','fa-file-zipper':'\uf1c6',
+  'fa-database':'\uf1c0','fa-server':'\uf233','fa-wifi':'\uf1eb','fa-code':'\uf121',
+  'fa-terminal':'\uf120','fa-laptop':'\uf109','fa-desktop':'\uf108','fa-tablet':'\uf10a',
+  'fa-mobile':'\uf10b','fa-keyboard':'\uf11c','fa-print':'\uf02f','fa-cart-shopping':'\uf07a',
+  'fa-bag-shopping':'\uf290','fa-store':'\uf54e','fa-credit-card':'\uf09d','fa-wallet':'\uf555',
+  'fa-coins':'\uf51e','fa-percent':'\uf311','fa-gift':'\uf06b','fa-ticket':'\uf3ff',
+  'fa-receipt':'\uf543','fa-utensils':'\uf02c','fa-mug-hot':'\uf7b6','fa-wine-glass':'\uf4e3',
+  'fa-cookie':'\uf563','fa-ice-cream':'\uf810','fa-pepper-hot':'\uf816','fa-dumbbell':'\uf44b',
+  'fa-person-running':'\uf70c','fa-person-swimming':'\uf5c4','fa-person-biking':'\uf84a',
+  'fa-futbol':'\uf1e3','fa-palette':'\uf53f','fa-paintbrush':'\uf1fc','fa-pen-ruler':'\uf5ae',
+  'fa-ruler':'\uf546','fa-scissors':'\uf0c4','fa-paperclip':'\uf0c6','fa-thumbtack':'\uf08d',
+  'fa-bullhorn':'\uf0a1','fa-megaphone':'\uf675','fa-trophy':'\uf091','fa-medal':'\uf5a2',
+  'fa-award':'\uf559','fa-puzzle-piece':'\uf12e','fa-dice':'\uf522','fa-chess':'\uf439',
+  'fa-gamepad':'\uf11b','fa-masks-theater':'\uf630','fa-magic':'\uf0d3','fa-wand-magic-sparkles':'\uf72b',
+  'fa-hat-wizard':'\uf6e8','fa-dragon':'\uf6d5','fa-skull':'\uf54c','fa-ghost':'\uf6e2',
+  'fa-robot':'\uf544','fa-atom':'\uf5d2','fa-dna':'\uf471','fa-flask':'\uf0c3',
+  'fa-vial':'\uf492','fa-syringe':'\uf48e','fa-pills':'\uf484','fa-stethoscope':'\uf0f1',
+  'fa-heart-pulse':'\uf21e','fa-band-aid':'\uf462','fa-temperature-half':'\uf2c9',
+  'fa-x-ray':'\uf4e6','fa-brain':'\uf5dc',
+  // brands
+  'fa-github':'\uf09b','fa-gitlab':'\uf15c','fa-bitbucket':'\uf171','fa-python':'\uf3e2',
+  'fa-js':'\uf3b8','fa-php':'\uf457','fa-java':'\uf1e6','fa-html5':'\uf13b',
+  'fa-css3-alt':'\uf38b','fa-sass':'\uf41e','fa-less':'\uf41d','fa-react':'\uf41b',
+  'fa-vuejs':'\uf41f','fa-angular':'\uf420','fa-svelte':'\uf41e','fa-nextjs':'\uf39c',
+  'fa-node-js':'\uf3d3','fa-npm':'\uf3d3','fa-yarn':'\uf4d3','fa-docker':'\uf308',
+  'fa-aws':'\uf375','fa-google':'\uf2a3','fa-microsoft':'\uf3ca','fa-apple':'\uf179',
+  'fa-facebook':'\uf09a','fa-twitter':'\uf099','fa-instagram':'\uf16d','fa-youtube':'\uf167',
+  'fa-tiktok':'\uf058','fa-linkedin':'\uf08c','fa-discord':'\uf392','fa-slack':'\uf198',
+  'fa-steam':'\uf1b6','fa-twitch':'\uf1e8','fa-spotify':'\uf1bc','fa-figma':'\uf444',
+  'fa-sketch':'\uf7c6','fa-dribbble':'\uf17d','fa-behance':'\uf1b4','fa-pinterest':'\uf0d2',
+  'fa-reddit':'\uf1a1','fa-tumblr':'\uf173','fa-medium':'\uf23a','fa-stack-overflow':'\uf16c',
+  'fa-chrome':'\uf268','fa-firefox':'\uf269','fa-edge':'\uf309','fa-opera':'\uf26a',
+  'fa-safari':'\uf267','fa-linux':'\uf17c','fa-windows':'\uf17a','fa-android':'\uf17b',
+};
+
+function classToUnicode(cls){
+  if(_ucMap[cls]) return _ucMap[cls];
+  // try DOM measurement first
+  const el = document.createElement('i');
+  el.className = `fa-solid ${cls}`;
+  el.style.cssText = 'position:absolute;left:-9999px;font-size:16px';
+  document.body.appendChild(el);
+  const before = getComputedStyle(el, '::before');
+  const content = before.getPropertyValue('content');
+  document.body.removeChild(el);
+  let u = content && content !== 'none' ? content.replace(/["']/g,'') : null;
+  // fallback to our map
+  if(!u || u === '?') u = FA_UNICODE[cls] || '\uf005'; // default to star
+  _ucMap[cls] = u;
+  return u;
+}
+
+// Pre-cache unicode on load
+function preloadUnicode(){
+  Object.values(FA_ICONS).flat().forEach(cls => classToUnicode(cls));
+}
+
+// Update canvas font to ensure FA is loaded
+function updateCanvasFont(){
+  ctx.font = '16px "Font Awesome 6 Free"';
+}
+
+/* ===== MOUSE INTERACTION ON CANVAS ===== */
+let mouseDown = false, mouseStart = null, moveMode = null;
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / S.zoom;
+  const my = (e.clientY - rect.top) / S.zoom;
+  mouseStart = {x: mx, y: my};
+
+  // check if clicking on an icon (reverse order = top first)
+  let hitIdx = -1;
+  for(let i = S.icons.length - 1; i >= 0; i--){
+    const ic = S.icons[i];
+    const ix = ic.x, iy = ic.y;
+    const iw = ic.w * ic.scale, ih = ic.h * ic.scale;
+    if(mx >= ix && mx <= ix+iw && my >= iy && my <= iy+ih){
+      hitIdx = i; break;
+    }
+  }
+
+  if(e.shiftKey){
+    // toggle selection
+    if(hitIdx >= 0){
+      const idx = S.selected.indexOf(hitIdx);
+      if(idx >= 0) S.selected.splice(idx,1); else S.selected.push(hitIdx);
+    }
+  } else {
+    if(hitIdx >= 0){
+      if(!S.selected.includes(hitIdx)) S.selected = [hitIdx];
+      moveMode = 'move';
+    } else {
+      S.selected = [];
+      moveMode = 'select';
+    }
+  }
+  mouseDown = true;
+  render();
+});
+
+canvas.addEventListener('mousemove', e => {
+  if(!mouseDown || !mouseStart) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / S.zoom;
+  const my = (e.clientY - rect.top) / S.zoom;
+
+  if(moveMode === 'move' && S.selected.length > 0){
+    const dx = mx - mouseStart.x, dy = my - mouseStart.y;
+    S.selected.forEach(i => {
+      S.icons[i].x += dx;
+      S.icons[i].y += dy;
+    });
+    mouseStart = {x:mx, y:my};
+    render();
+  } else if(moveMode === 'select'){
+    const box = $('#selectionBox');
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const sx = Math.min(mx, mouseStart.x) * S.zoom;
+    const sy = Math.min(my, mouseStart.y) * S.zoom;
+    const sw = Math.abs(mx - mouseStart.x) * S.zoom;
+    const sh = Math.abs(my - mouseStart.y) * S.zoom;
+    const canvasOffX = canvas.offsetLeft;
+    const canvasOffY = canvas.offsetTop;
+    box.style.display = 'block';
+    box.style.left = (canvasOffX + sx) + 'px';
+    box.style.top = (canvasOffY + sy) + 'px';
+    box.style.width = sw + 'px';
+    box.style.height = sh + 'px';
+
+    // select icons in box
+    const x1 = Math.min(mx, mouseStart.x), y1 = Math.min(my, mouseStart.y);
+    const x2 = Math.max(mx, mouseStart.x), y2 = Math.max(my, mouseStart.y);
+    S.selected = [];
+    S.icons.forEach((ic,i) => {
+      const iw = ic.w*ic.scale, ih = ic.h*ic.scale;
+      if(ic.x < x2 && ic.x+iw > x1 && ic.y < y2 && ic.y+ih > y1) S.selected.push(i);
+    });
+    render();
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  mouseDown = false; moveMode = null; mouseStart = null;
+  $('#selectionBox').style.display = 'none';
+});
+
+canvas.addEventListener('dblclick', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / S.zoom;
+  const my = (e.clientY - rect.top) / S.zoom;
+  // double click to edit color via popover
+  for(let i = S.icons.length - 1; i >= 0; i--){
+    const ic = S.icons[i];
+    const iw = ic.w * ic.scale, ih = ic.h * ic.scale;
+    if(mx >= ic.x && mx <= ic.x+iw && my >= ic.y && my <= ic.y+ih){
+      S.selected = [i];
+      showColorPopover(e.clientX, e.clientY, ic);
+      render();
+      return;
+    }
+  }
+});
+
+/* ===== KEYBOARD ===== */
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+  if(e.key === 'Delete' || e.key === 'Backspace'){
+    deleteSelected();
+  } else if(e.key === 'Escape'){
+    S.selected = [];
+    render();
+  } else if(e.ctrlKey && e.key === 'z'){
+    e.preventDefault(); undo();
+  } else if(e.ctrlKey && e.key === 'y'){
+    e.preventDefault(); redo();
+  } else if(e.ctrlKey && e.key === 'd'){
+    e.preventDefault(); cloneSelected();
+  } else if(e.key === 'ArrowLeft'){
+    nudgeSelected(-1, 0, e.shiftKey ? 10 : 1);
+  } else if(e.key === 'ArrowRight'){
+    nudgeSelected(1, 0, e.shiftKey ? 10 : 1);
+  } else if(e.key === 'ArrowUp'){
+    nudgeSelected(0, -1, e.shiftKey ? 10 : 1);
+  } else if(e.key === 'ArrowDown'){
+    nudgeSelected(0, 1, e.shiftKey ? 10 : 1);
+  }
+});
+
+function nudgeSelected(dx, dy, amount){
+  if(S.selected.length === 0) return;
+  pushUndo();
+  S.selected.forEach(i => { S.icons[i].x += dx*amount; S.icons[i].y += dy*amount; });
+  render();
+}
+
+/* ===== UNDO / REDO ===== */
+function pushUndo(){
+  S.undo.push(JSON.stringify(S.icons));
+  if(S.undo.length > 50) S.undo.shift();
+  S.redo = [];
+}
+function undo(){
+  if(S.undo.length === 0) return;
+  S.redo.push(JSON.stringify(S.icons));
+  S.icons = JSON.parse(S.undo.pop());
+  S.selected = [];
+  render();
+}
+function redo(){
+  if(S.redo.length === 0) return;
+  S.undo.push(JSON.stringify(S.icons));
+  S.icons = JSON.parse(S.redo.pop());
+  S.selected = [];
+  render();
+}
+
+/* ===== ACTIONS ===== */
+function deleteSelected(){
+  if(S.selected.length === 0) return;
+  pushUndo();
+  S.selected.sort((a,b)=>b-a).forEach(i => S.icons.splice(i,1));
+  S.selected = [];
+  render();
+}
+
+function cloneSelected(){
+  if(S.selected.length === 0) return;
+  pushUndo();
+  const newSel = [];
+  S.selected.forEach(i => {
+    const clone = {...S.icons[i], id:S.nextId++, x:S.icons[i].x+15, y:S.icons[i].y+15};
+    S.icons.push(clone);
+    newSel.push(S.icons.length - 1);
+  });
+  S.selected = newSel;
+  render();
+}
+
+function resetSelected(){
+  if(S.selected.length === 0) return;
+  pushUndo();
+  S.selected.forEach(i => {
+    S.icons[i].scale = 1;
+    S.icons[i].rotation = 0;
+    S.icons[i].color = S.defColor;
+    S.icons[i].opacity = S.defOpacity;
+  });
+  render();
+}
+
+/* ===== ALIGNMENT ===== */
+function alignSelected(axis, value){
+  if(S.selected.length === 0) return;
+  pushUndo();
+  S.selected.forEach(i => {
+    const ic = S.icons[i];
+    if(axis === 'x'){
+      if(value === 'left') ic.x = 0;
+      else if(value === 'center') ic.x = S.tileW/2 - (ic.w*ic.scale)/2;
+      else if(value === 'right') ic.x = S.tileW - ic.w*ic.scale;
+    } else {
+      if(value === 'top') ic.y = 0;
+      else if(value === 'middle') ic.y = S.tileH/2 - (ic.h*ic.scale)/2;
+      else if(value === 'bottom') ic.y = S.tileH - ic.h*ic.scale;
+    }
+  });
+  render();
+}
+
+function distributeSelected(axis){
+  if(S.selected.length < 3) return;
+  pushUndo();
+  const items = S.selected.map(i => S.icons[i]);
+  if(axis === 'h'){
+    items.sort((a,b) => a.x - b.x);
+    const totalW = items.reduce((s,ic) => s + ic.w*ic.scale, 0);
+    const gap = (S.tileW - totalW) / (items.length - 1);
+    let cx = 0;
+    items.forEach(ic => { ic.x = cx; cx += ic.w*ic.scale + gap; });
+  } else {
+    items.sort((a,b) => a.y - b.y);
+    const totalH = items.reduce((s,ic) => s + ic.h*ic.scale, 0);
+    const gap = (S.tileH - totalH) / (items.length - 1);
+    let cy = 0;
+    items.forEach(ic => { ic.y = cy; cy += ic.h*ic.scale + gap; });
+  }
+  render();
+}
+
+/* ===== COLOR POPOVER ===== */
+function showColorPopover(x, y, icon){
+  const pop = $('#colorPopover');
+  pop.classList.add('show');
+  pop.style.left = x + 'px';
+  pop.style.top = y + 'px';
+  $('#popColor').value = icon.color || '#7f5af0';
+  $('#popOpacity').value = icon.opacity || 1;
+}
+
+/* ===== RANDOM PATTERN ===== */
+function generateRandom(){
+  if(!$('#randKeep').checked){pushUndo(); S.icons = [];}
+  else pushUndo();
+
+  const count = parseInt($('#randCount').value) || 12;
+  const density = parseInt($('#randDensity').value) || 5;
+  const minS = parseFloat($('#randMinS').value) || 0.8;
+  const maxS = parseFloat($('#randMaxS').value) || 1.4;
+  const rotJ = parseInt($('#randRot').value) || 45;
+  const icons = FA_ICONS[$('#iconStyle').value] || FA_ICONS.solid;
+
+  const placed = Math.min(count, S.maxIcons - S.icons.length);
+  for(let i = 0; i < placed; i++){
+    const cls = icons[Math.floor(Math.random()*icons.length)];
+    const sc = minS + Math.random()*(maxS - minS);
+    const sz = (16 + density * 3) * sc;
+    const x = Math.random() * (S.tileW - sz);
+    const y = Math.random() * (S.tileH - sz);
+    const rot = (Math.random() - 0.5) * rotJ * 2;
+    S.icons.push({
+      id: S.nextId++, type:'fa', cls,
+      fontFamily: `'Font Awesome 6 Free'`,
+      fontWeight: $('#iconStyle').value === 'solid' ? 900 : 400,
+      glyph: cls, x, y, w: sz/sc, h: sz/sc, scale: sc, rotation: rot,
+      color: S.defColor, opacity: 0.3 + Math.random() * 0.7,
+    });
+  }
+  render();
+}
+
+/* ===== ZOOM ===== */
+function setZoom(z){
+  S.zoom = Math.max(0.25, Math.min(4, z));
+  canvas.style.width = S.tileW * S.zoom + 'px';
+  canvas.style.height = S.tileH * S.zoom + 'px';
+  $('#zoomReadout').textContent = Math.round(S.zoom * 100) + '%';
+}
+
+/* ===== CANVAS RESIZE ===== */
+function resizeCanvas(){
+  S.tileW = parseInt($('#tileW').value) || 320;
+  S.tileH = parseInt($('#tileH').value) || 320;
+  S.maxIcons = parseInt($('#maxIcons').value) || 150;
+  render();
+}
+
+/* ===== EXPORT ===== */
+function exportAs(fmt){
+  // render to offscreen canvas
+  const off = document.createElement('canvas');
+  off.width = S.tileW; off.height = S.tileH;
+  const octx = off.getContext('2d');
+
+  // draw bg
+  if(S.bgType === 'solid'){
+    octx.fillStyle = S.bgColorA; octx.fillRect(0,0,S.tileW,S.tileH);
+  } else if(S.bgType === 'gradient'){
+    const rad = S.bgAngle*Math.PI/180;
+    const grad = octx.createLinearGradient(
+      S.tileW/2-Math.cos(rad)*S.tileW, S.tileH/2-Math.sin(rad)*S.tileH,
+      S.tileW/2+Math.cos(rad)*S.tileW, S.tileH/2+Math.sin(rad)*S.tileH
+    );
+    grad.addColorStop(0,S.bgColorA); grad.addColorStop(1,S.bgColorB);
+    octx.fillStyle = grad; octx.fillRect(0,0,S.tileW,S.tileH);
+  }
+  if(S.dimBg < 1){ /* dimBg only for viewport preview, not export */ }
+
+  // draw icons
+  S.icons.forEach(ic => {
+    octx.save();
+    const cx=ic.x+ic.w/2, cy=ic.y+ic.h/2;
+    octx.translate(cx,cy);
+    octx.rotate((ic.rotation||0)*Math.PI/180);
+    octx.scale(ic.scale||1,ic.scale||1);
+    octx.globalAlpha = ic.opacity||1;
+    if(ic.type==='fa'){
+      octx.fillStyle = ic.color||'#fff';
+      octx.font = `${ic.fontWeight||900} ${ic.h}px "Font Awesome 6 Free"`;
+      octx.textAlign='center'; octx.textBaseline='middle';
+      octx.fillText(classToUnicode(ic.cls),0,0);
+    } else if(ic.type==='custom' && ic._img){
+      octx.drawImage(ic._img,-ic.w/2,-ic.h/2,ic.w,ic.h);
+      octx.globalCompositeOperation='source-in';
+      octx.fillStyle=ic.color||'#fff';
+      octx.fillRect(-ic.w/2,-ic.h/2,ic.w,ic.h);
+      octx.globalCompositeOperation='source-over';
+    }
+    octx.restore();
+  });
+
+  if(fmt === 'svg'){
+    // export as SVG data URI
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${S.tileW}" height="${S.tileH}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${S.tileW}px;height:${S.tileH}px"><canvas id="c" width="${S.tileW}" height="${S.tileH}"></canvas></div></foreignObject></svg>`;
+    // fallback: use PNG
+    downloadCanvas(off, 'tile-icons.png');
+  } else {
+    const mime = fmt === 'webp' ? 'image/webp' : 'image/png';
+    const ext = fmt === 'webp' ? 'webp' : 'png';
+    off.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `tile-icons.${ext}`;
+      a.click(); URL.revokeObjectURL(url);
+    }, mime);
+  }
+}
+
+function downloadCanvas(cvs, name){
+  cvs.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    a.click(); URL.revokeObjectURL(url);
+  });
+}
+
+function saveJSON(){
+  const data = { tileW:S.tileW, tileH:S.tileH, bgType:S.bgType, bgColorA:S.bgColorA, bgColorB:S.bgColorB, bgAngle:S.bgAngle, icons:S.icons.map(i=>({...i,_img:undefined})) };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tile-icons.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function loadJSON(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      pushUndo();
+      S.tileW = data.tileW || 320; S.tileH = data.tileH || 320;
+      S.bgType = data.bgType || 'solid';
+      S.bgColorA = data.bgColorA || '#ffffff';
+      S.bgColorB = data.bgColorB || '#dbeafe';
+      S.bgAngle = data.bgAngle || 45;
+      S.icons = data.icons || [];
+      S.nextId = Math.max(...S.icons.map(i=>i.id||0),0) + 1;
+      $('#tileW').value = S.tileW; $('#tileH').value = S.tileH;
+      $('#bgType').value = S.bgType; $('#bgColorA').value = S.bgColorA;
+      $('#bgColorB').value = S.bgColorB; $('#bgAngle').value = S.bgAngle;
+      render();
+      toast('Project loaded');
+    } catch(err){ toast('Invalid JSON'); }
+  };
+  reader.readAsText(file);
+}
+
+function generateDataUri(){
+  const off = document.createElement('canvas');
+  off.width = S.tileW; off.height = S.tileH;
+  const octx = off.getContext('2d');
+  if(S.bgType==='solid'){octx.fillStyle=S.bgColorA;octx.fillRect(0,0,S.tileW,S.tileH);}
+  else if(S.bgType==='gradient'){
+    const rad=S.bgAngle*Math.PI/180;
+    const g=octx.createLinearGradient(S.tileW/2-Math.cos(rad)*S.tileW,S.tileH/2-Math.sin(rad)*S.tileH,S.tileW/2+Math.cos(rad)*S.tileW,S.tileH/2+Math.sin(rad)*S.tileH);
+    g.addColorStop(0,S.bgColorA);g.addColorStop(1,S.bgColorB);octx.fillStyle=g;octx.fillRect(0,0,S.tileW,S.tileH);
+  }
+  S.icons.forEach(ic=>{
+    octx.save();octx.translate(ic.x+ic.w/2,ic.y+ic.h/2);
+    octx.rotate((ic.rotation||0)*Math.PI/180);octx.scale(ic.scale||1,ic.scale||1);
+    octx.globalAlpha=ic.opacity||1;
+    if(ic.type==='fa'){octx.fillStyle=ic.color||'#fff';octx.font=`${ic.fontWeight||900} ${ic.h}px "Font Awesome 6 Free"`;octx.textAlign='center';octx.textBaseline='middle';octx.fillText(classToUnicode(ic.cls),0,0);}
+    octx.restore();
+  });
+  const uri = off.toDataURL('image/png');
+  $('#dataUriOut').value = uri;
+  $('#dataUriBox').style.display = 'block';
+}
+
+function generateCSS(){
+  const uri = (()=>{
+    const off=document.createElement('canvas');off.width=S.tileW;off.height=S.tileH;const octx=off.getContext('2d');
+    if(S.bgType==='solid'){octx.fillStyle=S.bgColorA;octx.fillRect(0,0,S.tileW,S.tileH);}
+    else if(S.bgType==='gradient'){
+      const rad=S.bgAngle*Math.PI/180;
+      const g=octx.createLinearGradient(S.tileW/2-Math.cos(rad)*S.tileW,S.tileH/2-Math.sin(rad)*S.tileH,S.tileW/2+Math.cos(rad)*S.tileW,S.tileH/2+Math.sin(rad)*S.tileH);
+      g.addColorStop(0,S.bgColorA);g.addColorStop(1,S.bgColorB);octx.fillStyle=g;octx.fillRect(0,0,S.tileW,S.tileH);
+    }
+    S.icons.forEach(ic=>{
+      octx.save();octx.translate(ic.x+ic.w/2,ic.y+ic.h/2);
+      octx.rotate((ic.rotation||0)*Math.PI/180);octx.scale(ic.scale||1,ic.scale||1);
+      octx.globalAlpha=ic.opacity||1;
+      if(ic.type==='fa'){octx.fillStyle=ic.color||'#fff';octx.font=`${ic.fontWeight||900} ${ic.h}px "Font Awesome 6 Free"`;octx.textAlign='center';octx.textBaseline='middle';octx.fillText(classToUnicode(ic.cls),0,0);}
+      octx.restore();
+    });
+    return off.toDataURL('image/png');
+  })();
+  const css = `.tile-pattern {\n  background-image: url("${uri.substring(0,80)}...");\n  background-repeat: repeat;\n  background-size: ${S.tileW}px ${S.tileH}px;\n}`;
+  $('#cssOut').value = css;
+  $('#cssBox').style.display = 'block';
+}
+
+/* ===== TOAST ===== */
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'toast glass glass-xs';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ===== EVENTS ===== */
+function bindEvents(){
+  // toggle panels
+  $('#btnToggleLeft').onclick = () => $('#panelLeft').classList.toggle('mobile-open');
+  $('#btnToggleRight').onclick = () => $('#panelRight').classList.toggle('mobile-open');
+
+  // canvas settings
+  $('#tileW').onchange = $('#tileH').onchange = $('#maxIcons').onchange = resizeCanvas;
+  $('#dimBg').onchange = () => { S.dimBg = parseFloat($('#dimBg').value); render(); };
+  $('#btnRefresh').onclick = render;
+  $('#btnClear').onclick = () => { pushUndo(); S.icons = []; S.selected = []; render(); };
+
+  // background
+  $('#bgType').onchange = () => { S.bgType = $('#bgType').value; render(); };
+  $('#bgColorA').oninput = () => { S.bgColorA = $('#bgColorA').value; render(); };
+  $('#bgColorB').oninput = () => { S.bgColorB = $('#bgColorB').value; render(); };
+  $('#bgAngle').oninput = () => { S.bgAngle = parseInt($('#bgAngle').value); render(); };
+
+  // defaults
+  $('#defIconColor').oninput = () => { S.defColor = $('#defIconColor').value; $('#tbColorChip').style.background = S.defColor; };
+  $('#defIconOpacity').oninput = () => { S.defOpacity = parseFloat($('#defIconOpacity').value); };
+
+  // snapping
+  $('#snapEnabled').onchange = () => { S.snapEnabled = $('#snapEnabled').checked; };
+  $('#snapSpacing').onchange = () => { S.snapSpacing = parseInt($('#snapSpacing').value) || 20; };
+
+  // toolbar
+  $('#btnUndo').onclick = undo;
+  $('#btnRedo').onclick = redo;
+  $('#btnClone').onclick = cloneSelected;
+  $('#btnDelete').onclick = deleteSelected;
+  $('#btnReset').onclick = resetSelected;
+
+  // alignment
+  $('#btnAlignL').onclick = () => alignSelected('x','left');
+  $('#btnAlignC').onclick = () => alignSelected('x','center');
+  $('#btnAlignR').onclick = () => alignSelected('x','right');
+  $('#btnAlignT').onclick = () => alignSelected('y','top');
+  $('#btnAlignM').onclick = () => alignSelected('y','middle');
+  $('#btnAlignB').onclick = () => alignSelected('y','bottom');
+  $('#btnDistH').onclick = () => distributeSelected('h');
+  $('#btnDistV').onclick = () => distributeSelected('v');
+
+  // color popover
+  $('#btnTbColor').onclick = e => {
+    if(S.selected.length === 1){
+      showColorPopover(e.clientX, e.clientY + 40, S.icons[S.selected[0]]);
+    }
+  };
+  $('#popColor').oninput = () => {
+    S.selected.forEach(i => { S.icons[i].color = $('#popColor').value; });
+    render();
+  };
+  $('#popOpacity').oninput = () => {
+    S.selected.forEach(i => { S.icons[i].opacity = parseFloat($('#popOpacity').value); });
+    render();
+  };
+  document.addEventListener('click', e => {
+    if(!e.target.closest('.color-popover') && !e.target.closest('#btnTbColor')){
+      $('#colorPopover').classList.remove('show');
+    }
+  });
+
+  // icon search
+  $('#iconSearch').oninput = () => { loadIconLibrary(); renderIconGrid(); };
+  $('#iconStyle').onchange = () => { loadIconLibrary(); renderIconGrid(); };
+
+  // custom upload
+  $('#customUpload').onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(S.customIcons.length >= 12){toast('Max 12 custom icons');return}
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.customIcons.push({svg: ev.target.result, name: file.name});
+      renderCustomGrid();
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // random
+  $('#btnRandom').onclick = generateRandom;
+
+  // zoom
+  $('#btnZoomIn').onclick = () => setZoom(S.zoom + 0.1);
+  $('#btnZoomOut').onclick = () => setZoom(S.zoom - 0.1);
+  $('#btnZoomFit').onclick = () => {
+    const wrapW = canvasWrap.clientWidth - 60;
+    const wrapH = canvasWrap.clientHeight - 60;
+    setZoom(Math.min(wrapW/S.tileW, wrapH/S.tileH));
+  };
+
+  // mouse wheel zoom
+  canvasWrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    setZoom(S.zoom + (e.deltaY < 0 ? 0.05 : -0.05));
+  }, {passive:false});
+
+  // export
+  $('#btnExport').onclick = () => { $('#exportModal').style.display = 'flex'; };
+  $('#btnCloseExport').onclick = () => { $('#exportModal').style.display = 'none'; };
+  $('#exportModal').onclick = e => { if(e.target === $('#exportModal')) $('#exportModal').style.display = 'none'; };
+
+  $$('.export-format .btn').forEach(btn => {
+    btn.onclick = () => {
+      $$('.export-format .btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S.exportFmt = btn.dataset.fmt;
+    };
+  });
+
+  $('#btnDownload').onclick = () => exportAs(S.exportFmt);
+  $('#btnSaveJson').onclick = saveJSON;
+  $('#btnLoadJson').onclick = () => $('#jsonFileInput').click();
+  $('#jsonFileInput').onchange = e => { if(e.target.files[0]) loadJSON(e.target.files[0]); e.target.value=''; };
+  $('#btnDataUri').onclick = generateDataUri;
+  $('#btnCss').onclick = generateCSS;
+}
+
+/* ===== BOOT ===== */
+// Wait for Font Awesome to load, then initialize
+function waitForFA(cb){
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => {
+      // extra check: see if the FA font actually loaded
+      const test = document.createElement('span');
+      test.className = 'fa-solid fa-house';
+      test.style.cssText = 'position:absolute;left:-9999px;font-size:16px';
+      document.body.appendChild(test);
+      const w = test.getBoundingClientRect().width;
+      document.body.removeChild(test);
+      if(w > 0) cb();
+      else setTimeout(() => cb(), 500);
+    });
+  } else {
+    setTimeout(cb, 800);
+  }
+}
+
+waitForFA(() => {
+  preloadUnicode();
+  init();
+});
+
+})();
+</script>
+</body>
+</html>
