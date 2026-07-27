@@ -157,7 +157,20 @@ function doRender(canvas: HTMLCanvasElement, vw: number, vh: number) {
   for (const ic of s.icons) {
     const img = imgCache.get(ic.dataUrl);
     if (!img) continue;
-    drawIcon(tc, img, ic, s);
+    const half = ic.size / 2;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const nx = ic.x + dx * cw;
+        const ny = ic.y + dy * ch;
+        if (nx + half > 0 && nx - half < cw && ny + half > 0 && ny - half < ch) {
+          if (dx === 0 && dy === 0) {
+            drawIcon(tc, img, { ...ic, x: nx, y: ny }, s);
+          } else {
+            drawIcon(tc, img, { ...ic, x: nx, y: ny, opacity: ic.opacity * 0.35 }, s);
+          }
+        }
+      }
+    }
   }
 
   // 2) Tile viewport by drawing the tile in a grid (avoids createPattern ghosting)

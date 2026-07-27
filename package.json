@@ -17,7 +17,7 @@
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "electron": "^33.4.11",
+    "electron": "^43.2.0",
     "esbuild": "^0.28.1",
     "typescript": "^5.7.2"
   },
